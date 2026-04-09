@@ -29,7 +29,3 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: com.nahun.LyricSync
         INFOPLIST_FILE: Sources/Info.plist
         SWIFT_VERSION: "6.0"
-    entitlements:
-      path: Sources/LyricSync.entitlements
-      properties:
-        com.apple.developer.musickit: true
