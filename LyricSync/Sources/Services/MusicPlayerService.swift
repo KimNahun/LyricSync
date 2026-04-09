@@ -19,6 +19,9 @@ enum MusicPlayerError: Error, LocalizedError {
 /// ApplicationMusicPlayer.shared를 래핑하는 재생 Service.
 /// actor로 선언하여 Swift 6 동시성 경계를 안전하게 유지한다.
 actor MusicPlayerService {
+    // ApplicationMusicPlayer.shared는 Sendable을 준수하지 않아 actor 경계를 넘길 수 없다.
+    // MusicKit의 한계로 인해 nonisolated(unsafe)를 사용하여 actor 내부에서 접근한다.
+    // ApplicationMusicPlayer는 내부적으로 스레드 안전하게 구현되어 있으므로 실질적 데이터 레이스 위험은 낮다.
     nonisolated(unsafe) private let player = ApplicationMusicPlayer.shared
 
     /// 지정한 Song을 재생한다. MusicKit Song을 재조회하여 큐에 설정한다.
