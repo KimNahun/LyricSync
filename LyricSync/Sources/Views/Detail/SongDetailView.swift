@@ -71,7 +71,7 @@ struct SongDetailView: View {
                 } label: {
                     Image(systemName: isPlaying ? "pause.circle.fill" : "play.circle.fill")
                         .font(.system(size: 72))
-                        .foregroundStyle(.accentColor)
+                        .foregroundStyle(Color.accentColor)
                 }
                 .frame(minWidth: 72, minHeight: 72)
                 .accessibilityLabel(isPlaying ? "일시정지" : "재생")
