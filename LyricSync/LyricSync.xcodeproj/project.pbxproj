@@ -7,15 +7,43 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		53E167A12FADDDF8EBFFB155 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7E7E3FD213B0A4CD73A0EF5 /* ContentView.swift */; };
+		14EA7F13ADD3A5FE534720F6 /* LyricService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 104DE3B7627C722E619BD114 /* LyricService.swift */; };
+		276AD4288F29B3FD49591FC0 /* ChartService.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE4AC6EB35F4EA82769424A9 /* ChartService.swift */; };
+		3561B4C37AD5E6A919C2DB41 /* LyricState.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5FA77C36D09133392B6CD6A /* LyricState.swift */; };
+		3924F083ED2D4DB4B38B9E6B /* ChartListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B2A17F832F34AFBB2DA7A0E /* ChartListView.swift */; };
+		5051181509AB78E1A88769AA /* TimeFormatUtil.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA01BB9BC465DB690F3B2580 /* TimeFormatUtil.swift */; };
+		59EA866EC978A913FC126145 /* MusicPlayerService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5740767F3397AF81A5E5A49 /* MusicPlayerService.swift */; };
+		673BCCD1A311F60FD90154E8 /* FullPlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4078ADD2CBB2D795511A9146 /* FullPlayerView.swift */; };
+		7A8B0342F0CA31608084365B /* SongRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A4092EB534D4C008F088602F /* SongRowView.swift */; };
+		803835335A7B55F429E5A02F /* MiniPlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DDE2B5B5E6CD74D6200139F /* MiniPlayerView.swift */; };
+		880C6B6C35A5F630B2F0CACE /* PlayerViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 814EB36A95525FEF0AA5EE5C /* PlayerViewModel.swift */; };
+		9CA730EA2609CD7F0C853403 /* LyricLine.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE53BB3FCBC7E647879DD6D3 /* LyricLine.swift */; };
+		AC33964236729C888B72A1D9 /* SongDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 45088F3D5FBC84C7CA6FB878 /* SongDetailView.swift */; };
 		B5AAD7BCBC2CC7820B47D7C0 /* LyricSyncApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 410838B638613B640B2C35EA /* LyricSyncApp.swift */; };
+		D99817495EF00801611BDD8F /* Song.swift in Sources */ = {isa = PBXBuildFile; fileRef = 523B094384BCAEEF93813045 /* Song.swift */; };
+		DDE06C078AAC3DA41FC2D53C /* LyricLineView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71F7FE273C0557D6FB8050D8 /* LyricLineView.swift */; };
+		DF625431718CEEBDD6AC3446 /* ChartViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C84505F86BCEB8EC3E6FA0B /* ChartViewModel.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		0DDE2B5B5E6CD74D6200139F /* MiniPlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MiniPlayerView.swift; sourceTree = "<group>"; };
+		104DE3B7627C722E619BD114 /* LyricService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LyricService.swift; sourceTree = "<group>"; };
+		4078ADD2CBB2D795511A9146 /* FullPlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FullPlayerView.swift; sourceTree = "<group>"; };
 		410838B638613B640B2C35EA /* LyricSyncApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LyricSyncApp.swift; sourceTree = "<group>"; };
+		45088F3D5FBC84C7CA6FB878 /* SongDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SongDetailView.swift; sourceTree = "<group>"; };
+		4C84505F86BCEB8EC3E6FA0B /* ChartViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChartViewModel.swift; sourceTree = "<group>"; };
+		523B094384BCAEEF93813045 /* Song.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Song.swift; sourceTree = "<group>"; };
+		5B2A17F832F34AFBB2DA7A0E /* ChartListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChartListView.swift; sourceTree = "<group>"; };
+		71F7FE273C0557D6FB8050D8 /* LyricLineView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LyricLineView.swift; sourceTree = "<group>"; };
+		814EB36A95525FEF0AA5EE5C /* PlayerViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerViewModel.swift; sourceTree = "<group>"; };
 		931C6039DF565CCAAC99F625 /* LyricSync.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = LyricSync.entitlements; sourceTree = "<group>"; };
-		B7E7E3FD213B0A4CD73A0EF5 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		A4092EB534D4C008F088602F /* SongRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SongRowView.swift; sourceTree = "<group>"; };
+		A5740767F3397AF81A5E5A49 /* MusicPlayerService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusicPlayerService.swift; sourceTree = "<group>"; };
+		A5FA77C36D09133392B6CD6A /* LyricState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LyricState.swift; sourceTree = "<group>"; };
+		BA01BB9BC465DB690F3B2580 /* TimeFormatUtil.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeFormatUtil.swift; sourceTree = "<group>"; };
 		C94FB79C975509C69FC9B705 /* LyricSync.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = LyricSync.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		CE4AC6EB35F4EA82769424A9 /* ChartService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChartService.swift; sourceTree = "<group>"; };
+		CE53BB3FCBC7E647879DD6D3 /* LyricLine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LyricLine.swift; sourceTree = "<group>"; };
 		F6A3F54036DA3B2A61EA7A69 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -23,6 +51,7 @@
 		1B879656AD5890FB27D9631C /* Detail */ = {
 			isa = PBXGroup;
 			children = (
+				45088F3D5FBC84C7CA6FB878 /* SongDetailView.swift */,
 			);
 			path = Detail;
 			sourceTree = "<group>";
@@ -45,7 +74,6 @@
 		1D6F6E7B637FCC00D6A6AEC8 /* App */ = {
 			isa = PBXGroup;
 			children = (
-				B7E7E3FD213B0A4CD73A0EF5 /* ContentView.swift */,
 				410838B638613B640B2C35EA /* LyricSyncApp.swift */,
 			);
 			path = App;
@@ -63,6 +91,8 @@
 		3D2FDF1D72DEC8BE3CF56DB7 /* Player */ = {
 			isa = PBXGroup;
 			children = (
+				4078ADD2CBB2D795511A9146 /* FullPlayerView.swift */,
+				0DDE2B5B5E6CD74D6200139F /* MiniPlayerView.swift */,
 			);
 			path = Player;
 			sourceTree = "<group>";
@@ -78,6 +108,8 @@
 		4009CB1BA3F691ADC0717944 /* Chart */ = {
 			isa = PBXGroup;
 			children = (
+				5B2A17F832F34AFBB2DA7A0E /* ChartListView.swift */,
+				A4092EB534D4C008F088602F /* SongRowView.swift */,
 			);
 			path = Chart;
 			sourceTree = "<group>";
@@ -96,6 +128,9 @@
 		4DB49A39D1DC5361E81E76BB /* Services */ = {
 			isa = PBXGroup;
 			children = (
+				CE4AC6EB35F4EA82769424A9 /* ChartService.swift */,
+				104DE3B7627C722E619BD114 /* LyricService.swift */,
+				A5740767F3397AF81A5E5A49 /* MusicPlayerService.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -103,6 +138,7 @@
 		5BF60AABF1F5AAB29467B5B6 /* Player */ = {
 			isa = PBXGroup;
 			children = (
+				814EB36A95525FEF0AA5EE5C /* PlayerViewModel.swift */,
 			);
 			path = Player;
 			sourceTree = "<group>";
@@ -118,6 +154,9 @@
 		9054EFF7E5D9FDBC312DE96B /* Models */ = {
 			isa = PBXGroup;
 			children = (
+				CE53BB3FCBC7E647879DD6D3 /* LyricLine.swift */,
+				A5FA77C36D09133392B6CD6A /* LyricState.swift */,
+				523B094384BCAEEF93813045 /* Song.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -125,6 +164,7 @@
 		A1B23F80BE2D01B12A61C84B /* Shared */ = {
 			isa = PBXGroup;
 			children = (
+				BA01BB9BC465DB690F3B2580 /* TimeFormatUtil.swift */,
 			);
 			path = Shared;
 			sourceTree = "<group>";
@@ -132,6 +172,7 @@
 		F1901FC45B7EF5C019C7E0E1 /* Components */ = {
 			isa = PBXGroup;
 			children = (
+				71F7FE273C0557D6FB8050D8 /* LyricLineView.swift */,
 			);
 			path = Components;
 			sourceTree = "<group>";
@@ -139,6 +180,7 @@
 		F6CFA8437652F0C3FAA415D3 /* Chart */ = {
 			isa = PBXGroup;
 			children = (
+				4C84505F86BCEB8EC3E6FA0B /* ChartViewModel.swift */,
 			);
 			path = Chart;
 			sourceTree = "<group>";
@@ -173,7 +215,8 @@
 				LastUpgradeCheck = 1600;
 				TargetAttributes = {
 					7CFD5447653CF43F0C2B934C = {
-						DevelopmentTeam = "";
+						DevelopmentTeam = AHW642SXDF;
+						ProvisioningStyle = Automatic;
 					};
 				};
 			};
@@ -201,8 +244,22 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				53E167A12FADDDF8EBFFB155 /* ContentView.swift in Sources */,
+				3924F083ED2D4DB4B38B9E6B /* ChartListView.swift in Sources */,
+				276AD4288F29B3FD49591FC0 /* ChartService.swift in Sources */,
+				DF625431718CEEBDD6AC3446 /* ChartViewModel.swift in Sources */,
+				673BCCD1A311F60FD90154E8 /* FullPlayerView.swift in Sources */,
+				9CA730EA2609CD7F0C853403 /* LyricLine.swift in Sources */,
+				DDE06C078AAC3DA41FC2D53C /* LyricLineView.swift in Sources */,
+				14EA7F13ADD3A5FE534720F6 /* LyricService.swift in Sources */,
+				3561B4C37AD5E6A919C2DB41 /* LyricState.swift in Sources */,
 				B5AAD7BCBC2CC7820B47D7C0 /* LyricSyncApp.swift in Sources */,
+				803835335A7B55F429E5A02F /* MiniPlayerView.swift in Sources */,
+				59EA866EC978A913FC126145 /* MusicPlayerService.swift in Sources */,
+				880C6B6C35A5F630B2F0CACE /* PlayerViewModel.swift in Sources */,
+				D99817495EF00801611BDD8F /* Song.swift in Sources */,
+				AC33964236729C888B72A1D9 /* SongDetailView.swift in Sources */,
+				7A8B0342F0CA31608084365B /* SongRowView.swift in Sources */,
+				5051181509AB78E1A88769AA /* TimeFormatUtil.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -261,10 +318,11 @@
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
 				CURRENT_PROJECT_VERSION = 1;
 				DEBUG_INFORMATION_FORMAT = dwarf;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = AHW642SXDF;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
@@ -347,10 +405,11 @@
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
 				CURRENT_PROJECT_VERSION = 1;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = AHW642SXDF;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
