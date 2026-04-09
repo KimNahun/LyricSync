@@ -169,15 +169,44 @@ git commit -m "..."
 
 ---
 
-## git commit 메시지 형식
+## git commit 원칙
+
+### 커밋 단위 (핵심)
+
+**파일 하나 또는 논리적 단위 하나 = 커밋 하나.**
+작업 전체가 끝날 때까지 기다리지 않는다.
 
 ```
-[카테고리] 변경 내용 한 줄 요약
+✅ 올바른 예
+- ChartService.swift 작성 완료 → 즉시 커밋
+- PlayerViewModel.swift 작성 완료 → 즉시 커밋
+- MiniPlayerView.swift 작성 완료 → 즉시 커밋
 
-- 수정 파일 1: 변경 내용
-- 수정 파일 2: 변경 내용
+❌ 잘못된 예
+- ChartService + PlayerViewModel + MiniPlayerView 모두 완료 후 → 한 번에 커밋
+```
+
+Phase A에서 Generator가 파일을 여러 개 생성할 때:
+→ 파일 하나 생성될 때마다 빌드 확인 없이 바로 커밋 (빌드는 전체 완료 후 한 번)
+
+Phase B에서 Opus가 피드백 반영할 때:
+→ 파일 하나 수정 완료 → 빌드 확인 → 성공 시 즉시 커밋 → 다음 파일로
+
+### 커밋 메시지 형식
+
+```
+[카테고리] 파일명: 변경 내용 한 줄
 
 Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>
+```
+
+카테고리: `feat` / `fix` / `refactor` / `style` / `chore`
+
+예시:
+```
+feat: ChartService - MusicKit 인기 팝 차트 조회 구현
+fix: PlayerViewModel - Timer 백그라운드 복귀 시 재시작 처리
+style: MiniPlayerView - 미니 플레이어 safeAreaInset 적용
 ```
 
 ---
