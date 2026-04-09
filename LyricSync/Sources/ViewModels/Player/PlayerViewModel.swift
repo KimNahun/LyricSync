@@ -28,14 +28,14 @@ final class PlayerViewModel {
         return lines.indices.last(where: { lines[$0].timestamp <= currentTime })
     }
 
-    private let musicPlayerService: MusicPlayerService
-    private let lyricService: LyricService
+    private let musicPlayerService: any MusicPlayerServiceProtocol
+    private let lyricService: any LyricServiceProtocol
     private var timer: Timer?
     private var userScrollTimer: Timer?
 
     init(
-        musicPlayerService: MusicPlayerService = MusicPlayerService(),
-        lyricService: LyricService = LyricService()
+        musicPlayerService: any MusicPlayerServiceProtocol = MusicPlayerService(),
+        lyricService: any LyricServiceProtocol = LyricService()
     ) {
         self.musicPlayerService = musicPlayerService
         self.lyricService = lyricService

@@ -10,9 +10,9 @@ final class ChartViewModel {
     private(set) var isLoading: Bool = false
     private(set) var errorMessage: String? = nil
 
-    private let chartService: ChartService
+    private let chartService: any ChartServiceProtocol
 
-    init(chartService: ChartService = ChartService()) {
+    init(chartService: any ChartServiceProtocol = ChartService()) {
         self.chartService = chartService
     }
 

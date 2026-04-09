@@ -18,8 +18,13 @@ enum LyricServiceError: Error, LocalizedError {
     }
 }
 
+/// LyricService의 프로토콜. 테스트 시 Mock 주입을 위해 사용한다.
+protocol LyricServiceProtocol: Sendable {
+    func fetchLyrics(artist: String, track: String, duration: TimeInterval?) async -> LyricState
+}
+
 /// lrclib.net API에서 가사를 조회하고 LRC 형식을 파싱하는 Service.
-actor LyricService {
+actor LyricService: LyricServiceProtocol {
     private let session: URLSession
 
     init(session: URLSession = .shared) {

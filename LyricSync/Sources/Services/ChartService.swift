@@ -19,8 +19,13 @@ enum ChartServiceError: Error, LocalizedError {
     }
 }
 
+/// ChartService의 프로토콜. 테스트 시 Mock 주입을 위해 사용한다.
+protocol ChartServiceProtocol: Sendable {
+    func fetchChart() async throws -> [Song]
+}
+
 /// MusicKit을 통해 Apple Music 인기 팝 차트를 조회하는 Service.
-actor ChartService {
+actor ChartService: ChartServiceProtocol {
     /// Pop 장르 ID (Apple Music 기준). 지역에 따라 다를 수 있으므로 실기기 테스트 필수.
     private let popGenreID = MusicItemID("14")
 

@@ -16,9 +16,19 @@ enum MusicPlayerError: Error, LocalizedError {
     }
 }
 
+/// MusicPlayerService의 프로토콜. 테스트 시 Mock 주입을 위해 사용한다.
+protocol MusicPlayerServiceProtocol: Sendable {
+    func play(song: Song) async throws
+    func pause() async
+    func resume() async throws
+    func seek(to time: TimeInterval) async
+    var playbackTime: TimeInterval { get async }
+    var playbackStatus: MusicPlayer.PlaybackStatus { get async }
+}
+
 /// ApplicationMusicPlayer.shared를 래핑하는 재생 Service.
 /// actor로 선언하여 Swift 6 동시성 경계를 안전하게 유지한다.
-actor MusicPlayerService {
+actor MusicPlayerService: MusicPlayerServiceProtocol {
     // ApplicationMusicPlayer.shared는 Sendable을 준수하지 않아 actor 경계를 넘길 수 없다.
     // MusicKit의 한계로 인해 nonisolated(unsafe)를 사용하여 actor 내부에서 접근한다.
     // ApplicationMusicPlayer는 내부적으로 스레드 안전하게 구현되어 있으므로 실질적 데이터 레이스 위험은 낮다.
