@@ -199,7 +199,12 @@ struct FullPlayerView: View {
                 ForEach(Array(lines.enumerated()), id: \.offset) { index, line in
                     LyricLineView(
                         line: line,
-                        isActive: playerViewModel.currentLyricIndex == index
+                        isActive: playerViewModel.currentLyricIndex == index,
+                        onTap: {
+                            Task {
+                                await playerViewModel.seek(to: line.timestamp)
+                            }
+                        }
                     )
                     .id(index)
                 }
