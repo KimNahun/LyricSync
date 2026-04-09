@@ -19,7 +19,7 @@ enum MusicPlayerError: Error, LocalizedError {
 /// ApplicationMusicPlayer.shared를 래핑하는 재생 Service.
 /// actor로 선언하여 Swift 6 동시성 경계를 안전하게 유지한다.
 actor MusicPlayerService {
-    private let player = ApplicationMusicPlayer.shared
+    nonisolated(unsafe) private let player = ApplicationMusicPlayer.shared
 
     /// 지정한 Song을 재생한다. MusicKit Song을 재조회하여 큐에 설정한다.
     func play(song: Song) async throws {
