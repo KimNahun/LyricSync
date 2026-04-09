@@ -1,126 +1,184 @@
 # Swift 하네스 엔지니어링 오케스트레이터
 
-이 프로젝트는 3-Agent 하네스 구조로 동작합니다.
-사용자의 한 줄 프롬프트를 받아, **Planner → Generator → Evaluator** 파이프라인을 자동 실행합니다.
+**나(Sonnet)는 오케스트레이터다.** 직접 코드를 작성하거나 파일을 탐색하지 않는다.
+분류 → 위임 → 검증 → 커밋만 담당한다.
 
 **타겟**: Swift 6 + SwiftUI + MVVM + 엄격한 동시성 + HIG 준수
 
 ---
 
-## 실행 흐름
+## 모델 역할 분리 (핵심 원칙)
+
+```
+┌────────────────────┬────────────────┬─────────────────────────────┐
+│        역할        │      모델      │            담당             │
+├────────────────────┼────────────────┼─────────────────────────────┤
+│ 오케스트레이터     │ Sonnet (현재   │ 피드백 분류, xcodebuild     │
+│                    │ 세션)          │ 빌드 확인, git commit       │
+├────────────────────┼────────────────┼─────────────────────────────┤
+│ 코드 수정          │ Opus           │ 파일 읽기 + Edit/Write로    │
+│ 서브에이전트       │ (Agent 호출)   │ 실제 코드 변경              │
+├────────────────────┼────────────────┼─────────────────────────────┤
+│ 탐색/검색          │ Haiku          │ 파일 글로빙, grep, 문서     │
+│ 서브에이전트       │ (Agent 호출)   │ 저장, 구조 파악             │
+└────────────────────┴────────────────┴─────────────────────────────┘
+```
+
+**규칙**:
+- 나(Sonnet)는 Edit/Write/Glob/Grep 도구를 직접 쓰지 않는다
+- 코드 수정이 필요하면 반드시 `model: "opus"` 서브에이전트에 위임
+- 파일 탐색/검색이 필요하면 반드시 `model: "haiku"` 서브에이전트에 위임
+- 빌드 확인(`xcodebuild`)과 git 명령은 내가(Sonnet) 직접 Bash로 실행
+
+---
+
+## Phase A: 초기 코드 생성 (Planner → Generator → Evaluator)
+
+사용자의 프롬프트를 받아 전체 앱 코드를 최초 생성하는 파이프라인.
 
 ```
 [사용자 프롬프트]
        ↓
-  ① Planner 서브에이전트
-     → SPEC.md 생성
+  ① Haiku — 파일 구조 탐색 (docs/ 읽기, 기존 파일 확인)
        ↓
-  ② Generator 서브에이전트
-     → output/ Swift 파일 생성 + SELF_CHECK.md 작성
+  ② Opus Planner — SPEC.md 생성
        ↓
-  ③ Evaluator 서브에이전트
-     → QA_REPORT.md 작성
+  ③ Sonnet Generator — Swift 파일 생성 + SELF_CHECK.md
        ↓
-  ④ 판정 확인
-     → 합격: 완료 보고
-     → 불합격/조건부: ②로 돌아가 피드백 반영 (최대 3회 반복)
+  ④ Opus Evaluator — QA_REPORT.md 작성
+       ↓
+  ⑤ 나(Sonnet): xcodebuild 빌드 확인
+       ↓
+  ⑥ 판정
+     합격 → git commit + 완료 보고
+     불합격/조건부 → Phase B 피드백 루프
+```
+
+### Phase A 단계별 실행
+
+**① Haiku 탐색 서브에이전트 호출:**
+```
+agents/explorer.md를 읽고 그 지시를 따라라.
+docs/ 폴더의 모든 파일을 읽어라.
+LyricSync/Sources/ 아래 기존 Swift 파일 목록을 파악하라.
+결과를 EXPLORE_REPORT.md로 저장하라.
+```
+`model: "haiku"`
+
+**② Opus Planner 서브에이전트 호출:**
+```
+PROJECT_CONTEXT.md, ENGINEERING.md, EXPLORE_REPORT.md, agents/planner.md,
+agents/evaluation_criteria.md, docs/ 폴더 파일을 모두 읽어라.
+사용자 요청: [사용자 프롬프트]
+SPEC.md를 생성하라.
+```
+`model: "opus"`
+
+**③ Sonnet Generator 서브에이전트 호출:**
+```
+PROJECT_CONTEXT.md, ENGINEERING.md, SPEC.md, agents/generator.md,
+agents/evaluation_criteria.md, docs/ 폴더 파일을 모두 읽어라.
+LyricSync/Sources/ 아래에 Swift 파일들을 직접 생성하라 (output/ 없이).
+완료 후 SELF_CHECK.md를 작성하라.
+```
+`model: "sonnet"`
+
+**④ Opus Evaluator 서브에이전트 호출:**
+```
+PROJECT_CONTEXT.md, agents/evaluator.md, agents/evaluation_criteria.md,
+SPEC.md를 읽어라.
+LyricSync/Sources/ 아래 모든 Swift 파일을 읽어라.
+QA_REPORT.md를 작성하라.
+```
+`model: "opus"`
+
+**⑤ 나(Sonnet) — xcodebuild 빌드 확인:**
+```bash
+xcodebuild -project LyricSync/LyricSync.xcodeproj \
+  -scheme LyricSync \
+  -destination 'platform=iOS Simulator,name=iPhone 16 Pro' \
+  build 2>&1 | grep -E "error:|BUILD"
+```
+
+**⑥ 판정:**
+- `BUILD SUCCEEDED` + QA 합격 → git commit
+- 빌드 에러 또는 QA 불합격 → Phase B
+
+---
+
+## Phase B: 피드백 루프 (Orchestrator 패턴)
+
+빌드 에러, QA 불합격, 사용자 피드백을 수정하는 반복 루프. **최대 3회.**
+
+```
+[피드백 입력: 빌드 에러 / QA 불합격 / 사용자 요청]
+       ↓
+  ① 나(Sonnet): 피드백 분류
+     - [빌드 에러] 컴파일러 에러 메시지
+     - [아키텍처] MVVM/동시성 구조 문제
+     - [기능] 기능 누락/오동작
+     - [UI/UX] HIG 위반, 디자인 문제
+       ↓
+  ② Haiku — 관련 파일 탐색
+     (어느 파일을 수정해야 하는지 파악)
+       ↓
+  ③ Opus — 코드 수정
+     (Read + Edit/Write로 실제 파일 변경)
+       ↓
+  ④ 나(Sonnet): xcodebuild 빌드 확인
+       ↓
+  BUILD SUCCEEDED → git commit
+  BUILD FAILED    → ③으로 (최대 3회)
+```
+
+### Phase B 단계별 실행
+
+**① 나(Sonnet) 피드백 분류:**
+피드백을 읽고 카테고리 + 수정 대상 파일을 추정한다. 직접 파일을 열지 않는다.
+
+**② Haiku 탐색 서브에이전트 호출:**
+```
+agents/explorer.md를 읽고 그 지시를 따라라.
+다음 피드백에 관련된 파일을 찾아라: [피드백 내용]
+LyricSync/Sources/ 아래에서 관련 파일 경로와 핵심 코드 위치를 파악하라.
+결과를 EXPLORE_REPORT.md로 업데이트하라.
+```
+`model: "haiku"`
+
+**③ Opus 코드 수정 서브에이전트 호출:**
+```
+agents/code-modifier.md를 읽고 그 지시를 따라라.
+PROJECT_CONTEXT.md, ENGINEERING.md, agents/evaluation_criteria.md를 읽어라.
+EXPLORE_REPORT.md를 읽어라 (관련 파일 위치).
+수정할 파일을 Read로 읽고, Edit/Write로 수정하라.
+
+피드백: [피드백 내용]
+카테고리: [분류 결과]
+```
+`model: "opus"`
+
+**④ 나(Sonnet) 빌드 확인 후 커밋:**
+```bash
+xcodebuild ... | grep -E "error:|BUILD"
+```
+성공 시:
+```bash
+git add LyricSync/Sources/
+git commit -m "..."
 ```
 
 ---
 
-## 단계별 실행 지시
-
-### 단계 0: API 문서 확인
-
-docs/ 폴더에 API 레퍼런스 파일이 이미 존재하는지 확인한다.
-
-- `docs/musickit_notes.md` — MusicKit 사용 가이드
-- `docs/lrclib_api_notes.md` — lrclib.net API 스펙
-
-파일이 없으면 생성할 것. 파일이 있으면 그대로 사용.
-
-
-### 단계 1: Planner 호출
-
-서브에이전트에게 아래 내용을 전달한다:
+## git commit 메시지 형식
 
 ```
-PROJECT_CONTEXT.md 파일을 반드시 먼저 읽어라. 이것이 프로젝트 고정 요구사항이다.
-agents/planner.md 파일을 읽고, 그 지시를 따라라.
-agents/evaluation_criteria.md 파일도 읽고 참고하라.
-docs/ 폴더에 파일이 있으면 모두 읽어라 (API 레퍼런스).
+[카테고리] 변경 내용 한 줄 요약
 
-사용자 요청: [사용자가 준 프롬프트]
+- 수정 파일 1: 변경 내용
+- 수정 파일 2: 변경 내용
 
-PROJECT_CONTEXT.md의 요구사항을 사용자 프롬프트보다 우선 적용하라.
-결과를 SPEC.md 파일로 저장하라.
+Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>
 ```
-
-Planner 서브에이전트가 SPEC.md를 생성하면, 다음 단계로 진행한다.
-
-
-### 단계 2: Generator 호출
-
-**최초 실행 시:**
-
-```
-PROJECT_CONTEXT.md 파일을 반드시 먼저 읽어라. 이것이 프로젝트 고정 요구사항이다.
-agents/generator.md 파일을 읽고, 그 지시를 따라라.
-agents/evaluation_criteria.md 파일도 읽고 참고하라.
-SPEC.md 파일을 읽고, 전체 기능을 구현하라.
-docs/ 폴더에 파일이 있으면 모두 읽어라 (API 레퍼런스).
-
-PROJECT_CONTEXT.md의 아키텍처 요구사항을 반드시 준수하라.
-프로젝트 루트 폴더 아래에 파일 구조에 따라 Swift 파일들을 생성하라 (output/ 없이 직접).
-완료 후 SELF_CHECK.md를 작성하라.
-```
-
-**피드백 반영 시 (2회차 이상):**
-
-```
-PROJECT_CONTEXT.md 파일을 반드시 먼저 읽어라. 이것이 프로젝트 고정 요구사항이다.
-agents/generator.md 파일을 읽고, 그 지시를 따라라.
-agents/evaluation_criteria.md 파일도 읽고 참고하라.
-SPEC.md 파일을 읽어라.
-프로젝트 루트의 모든 Swift 파일을 읽어라 (App/, Views/, ViewModels/, Models/, Services/, Shared/ 등). 이것이 현재 코드다.
-QA_REPORT.md 파일을 읽어라. 이것이 QA 피드백이다.
-docs/ 폴더에 파일이 있으면 모두 읽어라 (API 레퍼런스).
-
-QA 피드백의 "구체적 개선 지시"를 모두 반영하여 코드를 수정하라.
-"방향 판단"이 "아키텍처 재설계"이면 레이어 구조 자체를 다시 잡아라.
-완료 후 SELF_CHECK.md를 업데이트하라.
-```
-
-
-### 단계 3: Evaluator 호출
-
-서브에이전트에게 아래 내용을 전달한다:
-
-```
-PROJECT_CONTEXT.md 파일을 반드시 먼저 읽어라. 이것이 프로젝트 고정 요구사항이다.
-agents/evaluator.md 파일을 읽고, 그 지시를 따라라.
-agents/evaluation_criteria.md 파일을 읽어라. 이것이 채점 기준이다.
-SPEC.md 파일을 읽어라. 이것이 설계서다.
-프로젝트 루트의 모든 Swift 파일을 읽어라 (App/, Views/, ViewModels/, Models/, Services/, Shared/ 등). 이것이 검수 대상이다.
-
-검수 절차:
-1. 프로젝트 루트의 코드를 분석하라
-2. SPEC.md의 기능이 구현되었는지 확인하라
-3. evaluation_criteria.md에 따라 5개 항목을 채점하라
-4. 최종 판정(합격/조건부/불합격)을 내려라
-5. 불합격 또는 조건부 시, 구체적 개선 지시를 작성하라
-
-결과를 QA_REPORT.md 파일로 저장하라.
-```
-
-
-### 단계 4: 판정 확인
-
-QA_REPORT.md를 읽고 판정을 확인한다.
-
-- **"합격"** → 사용자에게 완료 보고. output/ 폴더 안내.
-- **"조건부 합격"** 또는 **"불합격"** → 단계 2로 돌아가 피드백 반영.
-- **최대 반복 횟수**: 3회. 3회 후에도 불합격이면 현재 상태로 전달하고 이슈를 보고.
 
 ---
 
@@ -129,51 +187,36 @@ QA_REPORT.md를 읽고 판정을 확인한다.
 ```
 ## 하네스 실행 완료
 
-**결과물**: 프로젝트 루트 (App/, Views/, ViewModels/, Models/, Services/, Shared/ 등)
+**결과물**: LyricSync/Sources/ (App/, Views/, ViewModels/, Models/, Services/, Shared/)
 **Planner 설계 기능 수**: X개
 **QA 반복 횟수**: X회
-**최종 점수**: 동시성 X/10, MVVM X/10, HIG X/10, API X/10, 기능 X/10 (가중 X.X/10)
+**빌드 상태**: BUILD SUCCEEDED
 
 **실행 흐름**:
-1. Planner: [설계 요약 한 줄]
-2. Generator R1: [구현 결과 한 줄]
-3. Evaluator R1: [판정 + 핵심 피드백 한 줄]
-4. Generator R2: [수정 내용 한 줄] (있는 경우)
-5. Evaluator R2: [판정 결과] (있는 경우)
+1. Haiku 탐색: [파악한 내용 한 줄]
+2. Opus Planner: [설계 요약 한 줄]
+3. Sonnet Generator: [구현 결과 한 줄]
+4. Opus Evaluator: [판정 + 핵심 피드백 한 줄]
+5. 빌드: [결과]
+6. (Phase B가 있으면) Opus 수정 R1: [수정 내용]
 ...
 
 **주요 파일**:
-- App/LyricSyncApp.swift
-- Views/Chart/ChartListView.swift
-- Views/Detail/SongDetailView.swift
-- Views/Player/MiniPlayerView.swift
-- Views/Player/FullPlayerView.swift
-- Services/ChartService.swift
-- Services/MusicPlayerService.swift
-- Services/LyricService.swift
-...
+- LyricSync/Sources/App/LyricSyncApp.swift
+- LyricSync/Sources/Views/Chart/ChartListView.swift
+- LyricSync/Sources/Views/Detail/SongDetailView.swift
+- LyricSync/Sources/Views/Player/MiniPlayerView.swift
+- LyricSync/Sources/Views/Player/FullPlayerView.swift
+- LyricSync/Sources/Services/ChartService.swift
+- LyricSync/Sources/Services/MusicPlayerService.swift
+- LyricSync/Sources/Services/LyricService.swift
 ```
-
----
-
-## 서브에이전트 모델 선택 기준
-
-| 단계 | 모델 | 이유 |
-|------|------|------|
-| 단계 1 Planner | **opus** | 전체 아키텍처 설계. 잘못 잡으면 Generator/Evaluator 모두 망함 |
-| 단계 2 Generator (최초) | **sonnet** | 일반 Swift 코딩. 비용 대비 성능 최적 |
-| 단계 2 Generator (피드백 반영) | **opus** | QA 피드백 + 전체 코드 맥락 동시 처리. 복잡한 디버깅 |
-| 단계 3 Evaluator | **opus** | 동시성·MVVM·보안 위반 탐지. 놓치면 안 됨 |
-
-Agent 도구 호출 시 `model` 파라미터를 반드시 지정하라:
-- `"model": "sonnet"` — 1회차 코드 생성
-- `"model": "opus"` — 설계, QA, 피드백 반영
 
 ---
 
 ## 주의사항
 
-- Generator와 Evaluator는 반드시 다른 서브에이전트로 호출할 것 (분리가 핵심)
+- **output/ 폴더는 절대 생성하지 말 것** — Swift 파일은 `LyricSync/Sources/` 직하에 생성
+- Generator와 Evaluator는 반드시 다른 서브에이전트로 호출할 것
 - 각 단계 완료 후 생성된 파일이 존재하는지 확인할 것
-- **output/ 폴더는 절대 생성하지 말 것** — Swift 파일은 프로젝트 루트 직하(App/, Views/ 등)에 직접 생성
 - docs/ 폴더가 없으면 생성할 것
