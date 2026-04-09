@@ -14,7 +14,7 @@ final class PlayerViewModel {
     private(set) var errorMessage: String? = nil
 
     /// 슬라이더 드래그 상태. true이면 Timer 폴링 결과를 currentTime에 반영하지 않는다.
-    var isDragging: Bool = false
+    private(set) var isDragging: Bool = false
     /// 슬라이더 UI 값. 드래그 중에 UI만 업데이트하고 실제 seek은 드래그 완료 시에만 수행한다.
     var sliderValue: TimeInterval = 0
     /// 사용자 수동 스크롤 상태. true이면 가사 자동 스크롤을 멈춘다.
@@ -94,7 +94,20 @@ final class PlayerViewModel {
         }
     }
 
-    /// 지정한 시간으로 재생 위치를 이동한다. 슬라이더 드래그 완료 시 호출한다.
+    /// 슬라이더 드래그를 시작한다. 드래그 중에는 Timer 폴링 결과를 반영하지 않는다.
+    func startDragging() {
+        isDragging = true
+    }
+
+    /// 슬라이더 드래그를 완료하고 지정한 시간으로 seek한다.
+    func stopDragging(to time: TimeInterval) async {
+        await musicPlayerService.seek(to: time)
+        isDragging = false
+        currentTime = time
+        sliderValue = time
+    }
+
+    /// 지정한 시간으로 재생 위치를 이동한다.
     func seek(to time: TimeInterval) async {
         await musicPlayerService.seek(to: time)
         isDragging = false

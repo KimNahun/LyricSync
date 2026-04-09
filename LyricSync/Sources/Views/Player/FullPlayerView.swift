@@ -98,10 +98,10 @@ struct FullPlayerView: View {
                 in: 0...(playerViewModel.duration > 0 ? playerViewModel.duration : 1),
                 onEditingChanged: { editing in
                     if editing {
-                        playerViewModel.isDragging = true
+                        playerViewModel.startDragging()
                     } else {
                         Task {
-                            await playerViewModel.seek(to: playerViewModel.sliderValue)
+                            await playerViewModel.stopDragging(to: playerViewModel.sliderValue)
                         }
                     }
                 }
