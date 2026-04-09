@@ -26,7 +26,8 @@ struct SongDetailView: View {
                     Color(.systemFill)
                         .overlay {
                             Image(systemName: "music.note")
-                                .font(.system(size: 60))
+                                .font(.largeTitle)
+                                .imageScale(.large)
                                 .foregroundStyle(.secondary)
                         }
                 }
@@ -70,7 +71,8 @@ struct SongDetailView: View {
                     }
                 } label: {
                     Image(systemName: isPlaying ? "pause.circle.fill" : "play.circle.fill")
-                        .font(.system(size: 72))
+                        .font(.largeTitle)
+                        .imageScale(.large)
                         .foregroundStyle(Color.accentColor)
                 }
                 .frame(minWidth: 72, minHeight: 72)
@@ -80,7 +82,7 @@ struct SongDetailView: View {
                 if let errorMessage = playerViewModel.errorMessage, isCurrentSong {
                     Text(errorMessage)
                         .font(.caption)
-                        .foregroundStyle(.red)
+                        .foregroundStyle(Color(.systemRed))
                         .multilineTextAlignment(.center)
                         .padding(.horizontal)
                 }
