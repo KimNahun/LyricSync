@@ -141,7 +141,7 @@ struct FullPlayerView: View {
         } label: {
             Image(systemName: playerViewModel.isPlaying ? "pause.circle.fill" : "play.circle.fill")
                 .font(.system(size: 60))
-                .foregroundStyle(.accentColor)
+                .foregroundStyle(Color.accentColor)
         }
         .frame(minWidth: 60, minHeight: 60)
         .padding(.vertical, 12)
