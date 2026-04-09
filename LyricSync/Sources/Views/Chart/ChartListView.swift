@@ -1,16 +1,14 @@
 import SwiftUI
-import MusicKit
 
 /// Apple Music 인기 팝 차트 Top 50을 표시하는 메인 화면.
 /// NavigationStack 루트 뷰이며 권한 상태에 따라 분기 UI를 제공한다.
 struct ChartListView: View {
     @State private var viewModel = ChartViewModel()
     @Environment(PlayerViewModel.self) private var playerViewModel
-    @State private var authorizationStatus: MusicAuthorization.Status = .notDetermined
 
     var body: some View {
         Group {
-            switch authorizationStatus {
+            switch viewModel.authorizationStatus {
             case .authorized:
                 authorizedContent
             case .denied, .restricted:
@@ -25,10 +23,7 @@ struct ChartListView: View {
         .navigationTitle("인기 팝 차트")
         .navigationBarTitleDisplayMode(.large)
         .task {
-            authorizationStatus = MusicAuthorization.currentStatus
-            if authorizationStatus == .authorized {
-                await viewModel.fetchCharts()
-            }
+            await viewModel.checkAuthorizationAndFetch()
         }
     }
 
