@@ -62,7 +62,8 @@ struct FullPlayerView: View {
                 Color(.systemFill)
                     .overlay {
                         Image(systemName: "music.note")
-                            .font(.system(size: 40))
+                            .font(.title)
+                            .imageScale(.large)
                             .foregroundStyle(.secondary)
                     }
             }
@@ -140,7 +141,8 @@ struct FullPlayerView: View {
             }
         } label: {
             Image(systemName: playerViewModel.isPlaying ? "pause.circle.fill" : "play.circle.fill")
-                .font(.system(size: 60))
+                .font(.largeTitle)
+                .imageScale(.large)
                 .foregroundStyle(Color.accentColor)
         }
         .frame(minWidth: 60, minHeight: 60)
