@@ -1,0 +1,113 @@
+import SwiftUI
+import MusicKit
+
+/// Apple Music 인기 팝 차트 Top 50을 표시하는 메인 화면.
+/// NavigationStack 루트 뷰이며 권한 상태에 따라 분기 UI를 제공한다.
+struct ChartListView: View {
+    @State private var viewModel = ChartViewModel()
+    @Environment(PlayerViewModel.self) private var playerViewModel
+    @State private var authorizationStatus: MusicAuthorization.Status = .notDetermined
+
+    var body: some View {
+        Group {
+            switch authorizationStatus {
+            case .authorized:
+                authorizedContent
+            case .denied, .restricted:
+                deniedView
+            case .notDetermined:
+                ProgressView("권한 확인 중...")
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            @unknown default:
+                deniedView
+            }
+        }
+        .navigationTitle("인기 팝 차트")
+        .navigationBarTitleDisplayMode(.large)
+        .task {
+            authorizationStatus = MusicAuthorization.currentStatus
+            if authorizationStatus == .authorized {
+                await viewModel.fetchCharts()
+            }
+        }
+    }
+
+    // MARK: - 권한 승인 시 콘텐츠
+
+    @ViewBuilder
+    private var authorizedContent: some View {
+        if viewModel.isLoading {
+            ProgressView("차트 불러오는 중...")
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+        } else if let errorMessage = viewModel.errorMessage {
+            errorView(message: errorMessage)
+        } else {
+            songList
+        }
+    }
+
+    private var songList: some View {
+        List(viewModel.songs) { song in
+            NavigationLink(value: song) {
+                SongRowView(song: song)
+            }
+        }
+        .listStyle(.plain)
+        .navigationDestination(for: Song.self) { song in
+            SongDetailView(song: song)
+        }
+        .refreshable {
+            await viewModel.fetchCharts()
+        }
+    }
+
+    // MARK: - 에러 뷰
+
+    private func errorView(message: String) -> some View {
+        VStack(spacing: 16) {
+            Image(systemName: "exclamationmark.triangle")
+                .font(.largeTitle)
+                .foregroundStyle(.secondary)
+
+            Text(message)
+                .font(.body)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal)
+
+            Button("다시 시도") {
+                Task {
+                    await viewModel.fetchCharts()
+                }
+            }
+            .buttonStyle(.borderedProminent)
+            .accessibilityLabel("차트 다시 불러오기")
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    // MARK: - 권한 거부 뷰
+
+    private var deniedView: some View {
+        VStack(spacing: 16) {
+            Image(systemName: "music.note.list")
+                .font(.largeTitle)
+                .foregroundStyle(.secondary)
+
+            Text("Apple Music 접근 권한이 필요합니다.\n설정에서 허용해 주세요.")
+                .font(.body)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal)
+
+            Button("설정 열기") {
+                if let settingsURL = URL(string: UIApplication.openSettingsURLString) {
+                    UIApplication.shared.open(settingsURL)
+                }
+            }
+            .buttonStyle(.borderedProminent)
+            .accessibilityLabel("설정 앱에서 Apple Music 권한 허용")
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+}
