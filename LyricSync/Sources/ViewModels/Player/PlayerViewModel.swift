@@ -41,9 +41,13 @@ final class PlayerViewModel {
         self.lyricService = lyricService
     }
 
-    deinit {
+    /// deinit 대신 뷰의 onDisappear에서 호출하여 타이머를 정리한다.
+    /// (Swift 6에서 @MainActor 클래스의 deinit은 nonisolated이므로 격리 프로퍼티에 접근 불가)
+    func stopTimers() {
         timer?.invalidate()
+        timer = nil
         userScrollTimer?.invalidate()
+        userScrollTimer = nil
     }
 
     // MARK: - 재생 제어
