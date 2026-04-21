@@ -59,7 +59,11 @@ actor AuthService {
     func registerUser(appleUserId: String, email: String?, displayName: String?) async {
         guard let url = URL(string: "\(baseURL)/users") else { return }
 
-        var body: [String: Any] = ["apple_user_id": appleUserId]
+        let now = ISO8601DateFormatter().string(from: Date())
+        var body: [String: Any] = [
+            "apple_user_id": appleUserId,
+            "last_login_at": now,
+        ]
         if let email { body["email"] = email }
         if let displayName { body["display_name"] = displayName }
 

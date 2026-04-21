@@ -58,7 +58,8 @@ CREATE TABLE users (
     apple_user_id   TEXT UNIQUE NOT NULL,
     email           TEXT,
     display_name    TEXT,
-    created_at      TIMESTAMPTZ DEFAULT NOW()
+    created_at      TIMESTAMPTZ DEFAULT NOW(),
+    last_login_at   TIMESTAMPTZ DEFAULT NOW()
 );
 
 ALTER TABLE users ENABLE ROW LEVEL SECURITY;
