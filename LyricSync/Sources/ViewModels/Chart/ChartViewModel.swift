@@ -45,7 +45,7 @@ final class ChartViewModel {
     /// MusicKit 권한 상태를 확인하고, 승인 시 차트를 자동으로 fetch한다.
     func checkAuthorizationAndFetch() async {
         authorizationStatus = MusicAuthorization.currentStatus
-        if authorizationStatus == .authorized {
+        if authorizationStatus == .authorized && songs.isEmpty {
             await fetchCharts()
         }
     }

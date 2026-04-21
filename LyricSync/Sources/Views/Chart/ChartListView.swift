@@ -4,6 +4,7 @@ import SwiftUI
 struct ChartListView: View {
     @State private var viewModel = ChartViewModel()
     @Environment(PlayerViewModel.self) private var playerViewModel
+    @FocusState private var isSearchFocused: Bool
 
     var body: some View {
         Group {
@@ -46,10 +47,6 @@ struct ChartListView: View {
                     songList
                 }
             }
-            .onTapGesture {
-                // 바깥 탭 시 키보드 dismiss
-                UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
-            }
         }
     }
 
@@ -66,11 +63,13 @@ struct ChartListView: View {
                 .font(.subheadline)
                 .autocorrectionDisabled()
                 .submitLabel(.search)
+                .focused($isSearchFocused)
+                .onSubmit { isSearchFocused = false }
 
             if !viewModel.searchText.isEmpty {
                 Button {
                     viewModel.searchText = ""
-                    UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+                    isSearchFocused = false
                 } label: {
                     Image(systemName: "xmark.circle.fill")
                         .foregroundStyle(.tertiary)
@@ -107,6 +106,7 @@ struct ChartListView: View {
                 }
             }
         }
+        .scrollDismissesKeyboard(.interactively)
         .navigationDestination(for: Song.self) { song in
             SongDetailView(song: song)
         }
@@ -148,6 +148,7 @@ struct ChartListView: View {
                 }
             }
         }
+        .scrollDismissesKeyboard(.interactively)
         .navigationDestination(for: Song.self) { song in
             SongDetailView(song: song)
         }
