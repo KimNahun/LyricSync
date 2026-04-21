@@ -1,10 +1,16 @@
 import SwiftUI
 
 /// 곡 상세 + 재생 + 가사 + 번역을 통합한 단일 화면.
-/// 차트/검색에서 곡을 탭하면 이 화면으로 진입한다.
 struct SongDetailView: View {
     let song: Song
     @Environment(PlayerViewModel.self) private var playerViewModel
+    @Environment(\.dbUserId) private var dbUserId
+
+    @State private var userTranslations: [Int: String] = [:]  // index → 유저 번역
+    @State private var editingLineIndex: Int?
+    @State private var showTranslationInput = false
+
+    private let userTranslationService = UserTranslationService()
 
     private var isCurrentSong: Bool {
         playerViewModel.currentSong?.id == song.id
@@ -18,17 +24,14 @@ struct SongDetailView: View {
         @Bindable var vm = playerViewModel
 
         VStack(spacing: 0) {
-            // 상단: 곡 정보 + 재생 + 슬라이더
             playerHeader
 
-            // 번역 모드 토글 (번역 있을 때만)
             if isCurrentSong && playerViewModel.hasTranslation {
                 translationModeToggle
             }
 
             Divider()
 
-            // 가사 영역
             if isCurrentSong {
                 ScrollViewReader { proxy in
                     lyricSection(proxy: proxy)
@@ -48,24 +51,69 @@ struct SongDetailView: View {
         .navigationTitle(song.title)
         .navigationBarTitleDisplayMode(.inline)
         .task {
-            // 진입 시 자동 재생 (다른 곡이 재생 중이거나 아무것도 재생 중이 아닐 때)
             if !isCurrentSong {
                 await playerViewModel.play(song: song)
+            }
+            await loadUserTranslations()
+        }
+        .sheet(isPresented: $showTranslationInput) {
+            if let index = editingLineIndex,
+               case .synced(let lines) = playerViewModel.lyricState,
+               index < lines.count {
+                TranslationInputView(
+                    originalText: lines[index].text,
+                    lineIndex: index,
+                    existingTranslation: userTranslations[index]
+                ) { translated in
+                    userTranslations[index] = translated
+                    Task { await saveUserTranslations() }
+                }
             }
         }
     }
 
-    // MARK: - 플레이어 헤더 (곡 정보 + 슬라이더)
+    // MARK: - 유저 번역 로드/저장
+
+    private func loadUserTranslations() async {
+        guard let userId = dbUserId else { return }
+        let lines = await userTranslationService.fetch(userId: userId, appleMusicID: song.id)
+        for line in lines {
+            userTranslations[line.index] = line.translated
+        }
+    }
+
+    private func saveUserTranslations() async {
+        guard let userId = dbUserId else { return }
+        guard case .synced(let lines) = playerViewModel.lyricState else { return }
+
+        let translationLines = userTranslations.compactMap { index, translated -> UserTranslationLine? in
+            guard index < lines.count else { return nil }
+            return UserTranslationLine(
+                index: index,
+                original: lines[index].text,
+                translated: translated,
+                timestamp: lines[index].timestamp
+            )
+        }.sorted { $0.index < $1.index }
+
+        await userTranslationService.save(
+            userId: userId,
+            appleMusicID: song.id,
+            title: song.title,
+            artist: song.artistName,
+            lines: translationLines
+        )
+    }
+
+    // MARK: - 플레이어 헤더
 
     private var playerHeader: some View {
         @Bindable var vm = playerViewModel
 
         return VStack(spacing: 6) {
             HStack(spacing: 12) {
-                // 앨범 아트
                 CachedAsyncImage(url: song.artworkURL, size: 52)
 
-                // 곡 정보
                 VStack(alignment: .leading, spacing: 2) {
                     Text(song.title)
                         .font(.subheadline.weight(.semibold))
@@ -79,7 +127,6 @@ struct SongDetailView: View {
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
 
-                // 재생/일시정지
                 Button {
                     Task {
                         if isPlaying {
@@ -96,12 +143,10 @@ struct SongDetailView: View {
                         .foregroundStyle(Color.accentColor)
                 }
                 .frame(width: 44, height: 44)
-                .accessibilityLabel(isPlaying ? "일시정지" : "재생")
             }
             .padding(.horizontal, 16)
             .padding(.top, 8)
 
-            // 슬라이더 (재생 중일 때만)
             if isCurrentSong {
                 VStack(spacing: 2) {
                     Slider(
@@ -124,9 +169,7 @@ struct SongDetailView: View {
                             .font(.caption2)
                             .foregroundStyle(.secondary)
                             .monospacedDigit()
-
                         Spacer()
-
                         Text(TimeFormatUtil.format(playerViewModel.duration))
                             .font(.caption2)
                             .foregroundStyle(.secondary)
@@ -193,22 +236,60 @@ struct SongDetailView: View {
             LazyVStack(spacing: 6) {
                 ForEach(Array(lines.enumerated()), id: \.offset) { index, line in
                     VStack(spacing: 3) {
+                        // 원본 가사
                         LyricLineView(
                             line: line,
                             isActive: playerViewModel.currentLyricIndex == index,
                             onTap: {
-                                Task {
-                                    await playerViewModel.seek(to: line.timestamp)
-                                }
+                                Task { await playerViewModel.seek(to: line.timestamp) }
                             }
                         )
+                        .onLongPressGesture {
+                            editingLineIndex = index
+                            showTranslationInput = true
+                        }
 
-                        if let tLines = translatedLines, index < tLines.count {
+                        // 번역 표시: 유저 번역 > AI 번역 > 번역 추가 버튼
+                        if let userTrans = userTranslations[index] {
+                            // 유저 번역
+                            HStack(spacing: 4) {
+                                Text(userTrans)
+                                    .font(.footnote)
+                                    .foregroundStyle(Color.green.opacity(0.8))
+                                    .multilineTextAlignment(.center)
+                                    .frame(maxWidth: .infinity)
+
+                                Image(systemName: "pencil")
+                                    .font(.caption2)
+                                    .foregroundStyle(Color.green.opacity(0.5))
+                            }
+                            .padding(.bottom, 2)
+                            .onTapGesture {
+                                editingLineIndex = index
+                                showTranslationInput = true
+                            }
+                        } else if let tLines = translatedLines, index < tLines.count {
+                            // AI 번역
                             translatedLineView(
                                 text: tLines[index].text,
                                 index: index,
                                 isActive: playerViewModel.currentLyricIndex == index
                             )
+                        } else if dbUserId != nil {
+                            // 번역 추가 버튼
+                            Button {
+                                editingLineIndex = index
+                                showTranslationInput = true
+                            } label: {
+                                Text("번역 추가")
+                                    .font(.caption2)
+                                    .foregroundStyle(.secondary.opacity(0.3))
+                                    .padding(.horizontal, 10)
+                                    .padding(.vertical, 3)
+                                    .background(Capsule().fill(Color(.systemGray6)))
+                            }
+                            .buttonStyle(.plain)
+                            .padding(.bottom, 2)
                         }
                     }
                     .id(index)
@@ -225,7 +306,7 @@ struct SongDetailView: View {
         )
     }
 
-    // MARK: - 번역 줄 표시
+    // MARK: - AI 번역 줄 표시
 
     @ViewBuilder
     private func translatedLineView(text: String, index: Int, isActive: Bool) -> some View {

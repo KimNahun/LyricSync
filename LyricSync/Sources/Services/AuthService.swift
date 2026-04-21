@@ -86,6 +86,27 @@ actor AuthService {
         }
     }
 
+    /// Supabase에서 apple_user_id로 DB user_id(BIGINT)를 조회한다.
+    func fetchUserId(appleUserId: String) async -> Int? {
+        let urlString = "\(baseURL)/users?apple_user_id=eq.\(appleUserId)&select=id"
+        guard let url = URL(string: urlString) else { return nil }
+
+        var request = URLRequest(url: url)
+        request.setValue(apiKey, forHTTPHeaderField: "apikey")
+        request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+
+        do {
+            let (data, _) = try await session.data(for: request)
+            let rows = try JSONDecoder().decode([[String: Int]].self, from: data)
+            let dbId = rows.first?["id"]
+            AppLogger.info("DB user_id 조회: \(dbId?.description ?? "nil")", category: .supabase)
+            return dbId
+        } catch {
+            AppLogger.error("DB user_id 조회 실패: \(error.localizedDescription)", category: .supabase)
+            return nil
+        }
+    }
+
     /// Supabase에서 유저를 삭제한다.
     func deleteUser(appleUserId: String) async {
         let urlString = "\(baseURL)/users?apple_user_id=eq.\(appleUserId)"

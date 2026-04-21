@@ -8,6 +8,7 @@ struct LyricSyncApp: App {
     @State private var playerViewModel = PlayerViewModel()
     @State private var isAuthenticated = false
     @State private var isCheckingAuth = true
+    @State private var dbUserId: Int?
 
     private let authService = AuthService()
 
@@ -15,16 +16,14 @@ struct LyricSyncApp: App {
         WindowGroup {
             Group {
                 if isCheckingAuth {
-                    // 인증 확인 중 스플래시
                     ProgressView()
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else if isAuthenticated {
-                    // 메인 화면
                     mainContent
                 } else {
-                    // 로그인 화면
                     LoginView {
                         isAuthenticated = true
+                        Task { await fetchDbUserId() }
                     }
                 }
             }
@@ -56,6 +55,7 @@ struct LyricSyncApp: App {
             }
         }
         .environment(playerViewModel)
+        .environment(\.dbUserId, dbUserId)
     }
 
     private func checkAuth() async {
@@ -63,9 +63,28 @@ struct LyricSyncApp: App {
         switch result {
         case .valid:
             isAuthenticated = true
+            await fetchDbUserId()
         case .invalid:
             isAuthenticated = false
         }
         isCheckingAuth = false
+    }
+
+    private func fetchDbUserId() async {
+        guard let appleUserId = KeychainService.getUserId() else { return }
+        dbUserId = await authService.fetchUserId(appleUserId: appleUserId)
+    }
+}
+
+// MARK: - dbUserId Environment Key
+
+private struct DbUserIdKey: EnvironmentKey {
+    static let defaultValue: Int? = nil
+}
+
+extension EnvironmentValues {
+    var dbUserId: Int? {
+        get { self[DbUserIdKey.self] }
+        set { self[DbUserIdKey.self] = newValue }
     }
 }
