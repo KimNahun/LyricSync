@@ -25,11 +25,17 @@ targets:
     deploymentTarget: "17.0"
     sources:
       - path: Sources
+    entitlements:
+      path: Sources/LyricSync.entitlements
+      properties:
+        com.apple.developer.applesignin:
+          - Default
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.nahun.LyricSync
         INFOPLIST_FILE: Sources/Info.plist
         SWIFT_VERSION: "6.0"
+        CODE_SIGN_ENTITLEMENTS: Sources/LyricSync.entitlements
     scheme:
       commandLineArguments:
         "-AppleLanguages": "(ko)"
