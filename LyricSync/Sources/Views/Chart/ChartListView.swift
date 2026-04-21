@@ -22,6 +22,7 @@ struct ChartListView: View {
         }
         .navigationTitle("인기 팝 차트")
         .navigationBarTitleDisplayMode(.large)
+        .searchable(text: $viewModel.searchText, prompt: "곡 검색")
         .task {
             await viewModel.checkAuthorizationAndFetch()
         }
@@ -36,15 +37,22 @@ struct ChartListView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else if let errorMessage = viewModel.errorMessage {
             errorView(message: errorMessage)
+        } else if viewModel.isSearchActive {
+            searchResultsList
         } else {
             songList
         }
     }
 
+    // MARK: - 차트 리스트
+
     private var songList: some View {
         List(viewModel.songs) { song in
             NavigationLink(value: song) {
-                SongRowView(song: song)
+                SongRowView(
+                    song: song,
+                    hasTranslation: viewModel.hasTranslation(for: song)
+                )
             }
         }
         .listStyle(.plain)
@@ -53,6 +61,38 @@ struct ChartListView: View {
         }
         .refreshable {
             await viewModel.fetchCharts()
+        }
+    }
+
+    // MARK: - 검색 결과 리스트
+
+    private var searchResultsList: some View {
+        List {
+            if viewModel.isSearching {
+                HStack {
+                    Spacer()
+                    ProgressView()
+                    Spacer()
+                }
+            } else if viewModel.searchResults.isEmpty {
+                Text("검색 결과가 없습니다")
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity)
+                    .padding(.top, 40)
+            } else {
+                ForEach(viewModel.searchResults) { song in
+                    NavigationLink(value: song) {
+                        SongRowView(
+                            song: song,
+                            hasTranslation: viewModel.hasTranslation(for: song)
+                        )
+                    }
+                }
+            }
+        }
+        .listStyle(.plain)
+        .navigationDestination(for: Song.self) { song in
+            SongDetailView(song: song)
         }
     }
 

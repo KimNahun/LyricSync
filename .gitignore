@@ -37,3 +37,7 @@ __MACOSX/
 # Xcode project user settings
 LyricSync/LyricSync.xcodeproj/xcuserdata/
 LyricSync/LyricSync.xcodeproj/project.xcworkspace/xcuserdata/
+
+# Secrets (Supabase keys, API keys)
+LyricSync/Sources/Secrets.swift
+**/Secrets.swift

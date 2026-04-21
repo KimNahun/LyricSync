@@ -434,4 +434,67 @@ Services
 
 ---
 
+## 빌드 에러 분석 (2026-04-09 업데이트)
+
+### 에러 요약
+PlayerViewModel.swift에서 @MainActor 격리 위반으로 인한 컴파일 에러 2개 발생
+
+### 에러 1: Line 45
+- **파일**: `/Users/haesuyoun/Desktop/NahunPersonalFolder/MusicStudy/LyricSync/Sources/ViewModels/Player/PlayerViewModel.swift`
+- **라인**: 45
+- **함수**: `deinit` (라인 44-47)
+- **에러 메시지**: `main actor-isolated property 'timer' can not be referenced from a nonisolated context`
+- **원인**: `deinit`은 MainActor로 격리되지 않은 nonisolated 메서드인데, timer 프로퍼티는 @MainActor로 격리됨
+- **코드**:
+  ```swift
+  deinit {
+      timer?.invalidate()        // ← Line 45: 에러
+      userScrollTimer?.invalidate()
+  }
+  ```
+
+### 에러 2: Line 46
+- **파일**: `/Users/haesuyoun/Desktop/NahunPersonalFolder/MusicStudy/LyricSync/Sources/ViewModels/Player/PlayerViewModel.swift`
+- **라인**: 46
+- **함수**: `deinit` (라인 44-47)
+- **에러 메시지**: `main actor-isolated property 'userScrollTimer' can not be referenced from a nonisolated context`
+- **원인**: `deinit`은 nonisolated 메서드인데, userScrollTimer 프로퍼티는 @MainActor로 격리됨
+- **코드**:
+  ```swift
+  deinit {
+      timer?.invalidate()
+      userScrollTimer?.invalidate()  // ← Line 46: 에러
+  }
+  ```
+
+### 근본 원인
+- **클래스 선언** (Line 6-8): `@MainActor @Observable final class PlayerViewModel`
+- **프로퍼티 선언** (Line 33-34):
+  ```swift
+  private var timer: Timer?
+  private var userScrollTimer: Timer?
+  ```
+- **Deinit 메서드** (Line 44-47): 명시적 격리 지정 없음 → nonisolated로 기본 처리
+- **Swift 6 strict concurrency**: @MainActor 클래스의 모든 프로퍼티는 @MainActor로 격리되지만, deinit은 기본 nonisolated → 접근 불가
+
+### 해결책 (참고용, 수정 대상 아님)
+1. **Option A**: `deinit` 앞에 `nonisolated` 제거 또는 `@MainActor` 명시 추가
+   ```swift
+   @MainActor deinit {
+       timer?.invalidate()
+       userScrollTimer?.invalidate()
+   }
+   ```
+2. **Option B**: MainActor 작업으로 분리
+   ```swift
+   deinit {
+       Task { @MainActor in
+           timer?.invalidate()
+           userScrollTimer?.invalidate()
+       }
+   }
+   ```
+
+---
+
 생성자: Haiku Explorer (2026-04-09)

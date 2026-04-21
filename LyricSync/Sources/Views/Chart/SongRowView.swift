@@ -1,9 +1,10 @@
 import SwiftUI
 
 /// 차트 리스트에서 개별 곡을 표시하는 행 컴포넌트.
-/// 순위, 앨범 아트 썸네일, 곡명, 아티스트명을 표시한다.
+/// 순위, 앨범 아트 썸네일, 곡명, 아티스트명, 번역 배지를 표시한다.
 struct SongRowView: View {
     let song: Song
+    var hasTranslation: Bool = false
 
     var body: some View {
         HStack(spacing: 12) {
@@ -45,9 +46,20 @@ struct SongRowView: View {
                     .lineLimit(1)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
+
+            // 번역 배지
+            if hasTranslation {
+                Text("한")
+                    .font(.caption2.weight(.bold))
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 2)
+                    .background(Color.accentColor, in: RoundedRectangle(cornerRadius: 4))
+                    .accessibilityLabel("한국어 번역 있음")
+            }
         }
         .padding(.vertical, 4)
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(song.rank.map { "\($0)위, " } ?? "")\(song.title), \(song.artistName)")
+        .accessibilityLabel("\(song.rank.map { "\($0)위, " } ?? "")\(song.title), \(song.artistName)\(hasTranslation ? ", 번역 있음" : "")")
     }
 }

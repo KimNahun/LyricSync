@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// 전체 화면 플레이어.
-/// 슬라이더 seek, 가사 싱크 하이라이트, 자동 스크롤을 제공한다.
+/// 슬라이더 seek, 가사 싱크 하이라이트, 자동 스크롤, 번역 모드를 제공한다.
 struct FullPlayerView: View {
     @Environment(PlayerViewModel.self) private var playerViewModel
     @Environment(\.dismiss) private var dismiss
@@ -12,16 +12,15 @@ struct FullPlayerView: View {
         NavigationStack {
             ScrollViewReader { proxy in
                 VStack(spacing: 0) {
-                    // 상단: 앨범 아트 + 곡 정보
                     headerSection
-
-                    // 슬라이더 + 시간 표시
                     sliderSection
-
-                    // 재생/일시정지 버튼
                     playbackButton
 
-                    // 가사 영역
+                    // 번역 모드 토글 (번역이 있을 때만 표시)
+                    if playerViewModel.hasTranslation {
+                        translationModeToggle
+                    }
+
                     lyricSection(proxy: proxy)
                 }
                 .padding(.horizontal, 20)
@@ -150,6 +149,20 @@ struct FullPlayerView: View {
         .accessibilityLabel(playerViewModel.isPlaying ? "일시정지" : "재생")
     }
 
+    // MARK: - 번역 모드 토글
+
+    private var translationModeToggle: some View {
+        @Bindable var vm = playerViewModel
+
+        return Picker("번역 모드", selection: $vm.translationMode) {
+            Text("동시 표시").tag(TranslationMode.simultaneous)
+            Text("가림 모드").tag(TranslationMode.hidden)
+        }
+        .pickerStyle(.segmented)
+        .padding(.bottom, 8)
+        .accessibilityLabel("번역 표시 모드 선택")
+    }
+
     // MARK: - 가사 영역
 
     @ViewBuilder
@@ -176,38 +189,43 @@ struct FullPlayerView: View {
             }
 
         case .instrumental:
-            lyricMessageView(
-                icon: "pianokeys",
-                message: "이 곡은 인스트루멘탈입니다"
-            )
+            lyricMessageView(icon: "pianokeys", message: "이 곡은 인스트루멘탈입니다")
 
         case .notFound:
-            lyricMessageView(
-                icon: "text.slash",
-                message: "가사를 찾을 수 없습니다"
-            )
+            lyricMessageView(icon: "text.slash", message: "가사를 찾을 수 없습니다")
 
         case .error(let message):
-            lyricMessageView(
-                icon: "exclamationmark.circle",
-                message: message
-            )
+            lyricMessageView(icon: "exclamationmark.circle", message: message)
         }
     }
 
     private func syncedLyricView(lines: [LyricLine], proxy: ScrollViewProxy) -> some View {
-        ScrollView {
+        let translatedLines = playerViewModel.translatedLines
+
+        return ScrollView {
             LazyVStack(spacing: 4) {
                 ForEach(Array(lines.enumerated()), id: \.offset) { index, line in
-                    LyricLineView(
-                        line: line,
-                        isActive: playerViewModel.currentLyricIndex == index,
-                        onTap: {
-                            Task {
-                                await playerViewModel.seek(to: line.timestamp)
+                    VStack(spacing: 2) {
+                        // 원본 가사
+                        LyricLineView(
+                            line: line,
+                            isActive: playerViewModel.currentLyricIndex == index,
+                            onTap: {
+                                Task {
+                                    await playerViewModel.seek(to: line.timestamp)
+                                }
                             }
+                        )
+
+                        // 번역 가사
+                        if let tLines = translatedLines, index < tLines.count {
+                            translatedLineView(
+                                text: tLines[index].text,
+                                index: index,
+                                isActive: playerViewModel.currentLyricIndex == index
+                            )
                         }
-                    )
+                    }
                     .id(index)
                 }
             }
@@ -223,6 +241,55 @@ struct FullPlayerView: View {
                     playerViewModel.onUserScrollEnded()
                 }
         )
+    }
+
+    // MARK: - 번역 줄 표시
+
+    @ViewBuilder
+    private func translatedLineView(text: String, index: Int, isActive: Bool) -> some View {
+        switch playerViewModel.translationMode {
+        case .simultaneous:
+            // 동시 표시: 항상 번역 보임
+            Text(text)
+                .font(.caption)
+                .foregroundStyle(isActive ? Color.primary.opacity(0.7) : Color.secondary.opacity(0.5))
+                .multilineTextAlignment(.center)
+                .frame(maxWidth: .infinity)
+                .padding(.bottom, 4)
+
+        case .hidden:
+            // 가림 모드: 눈 버튼으로 개별 공개
+            HStack(spacing: 4) {
+                if playerViewModel.revealedLineIndices.contains(index) {
+                    Text(text)
+                        .font(.caption)
+                        .foregroundStyle(isActive ? Color.primary.opacity(0.7) : Color.secondary.opacity(0.5))
+                        .multilineTextAlignment(.center)
+                        .frame(maxWidth: .infinity)
+                        .transition(.opacity)
+                } else {
+                    Text("· · · · ·")
+                        .font(.caption)
+                        .foregroundStyle(.secondary.opacity(0.3))
+                        .frame(maxWidth: .infinity)
+                }
+
+                // 눈 버튼 — 자동 스크롤을 중지시키지 않음
+                Button {
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        playerViewModel.toggleReveal(at: index)
+                    }
+                } label: {
+                    Image(systemName: playerViewModel.revealedLineIndices.contains(index) ? "eye.fill" : "eye.slash")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                        .frame(width: 28, height: 28)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(playerViewModel.revealedLineIndices.contains(index) ? "번역 숨기기" : "번역 보기")
+            }
+            .padding(.bottom, 4)
+        }
     }
 
     private func lyricMessageView(icon: String, message: String) -> some View {

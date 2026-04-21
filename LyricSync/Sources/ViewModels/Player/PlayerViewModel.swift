@@ -13,14 +13,36 @@ final class PlayerViewModel {
     private(set) var lyricState: LyricState = .loading
     private(set) var errorMessage: String? = nil
 
-    /// 슬라이더 드래그 상태. true이면 Timer 폴링 결과를 currentTime에 반영하지 않는다.
+    /// 번역된 가사 라인. Supabase에서 번역이 있을 때만 non-nil.
+    private(set) var translatedLines: [LyricLine]? = nil
+
+    /// 번역 표시 모드. UserDefaults에 저장되어 앱 재시작 후에도 유지.
+    var translationMode: TranslationMode {
+        didSet {
+            UserDefaults.standard.set(translationMode.rawValue, forKey: "translationMode")
+        }
+    }
+
+    /// 가림 모드에서 공개된 줄 인덱스. 곡 변경/풀플레이어 열기 시 리셋.
+    var revealedLineIndices: Set<Int> = []
+
+    /// 번역 가사가 있는지 여부. UI에서 모드 토글 표시 여부를 결정한다.
+    var hasTranslation: Bool { translatedLines != nil }
+
+    /// 슬라이더 드래그 상태.
     private(set) var isDragging: Bool = false
-    /// 슬라이더 UI 값. 드래그 중에 UI만 업데이트하고 실제 seek은 드래그 완료 시에만 수행한다.
+    /// 슬라이더 UI 값.
     var sliderValue: TimeInterval = 0
-    /// 사용자 수동 스크롤 상태. true이면 가사 자동 스크롤을 멈춘다.
+    /// 사용자 수동 스크롤 상태.
     var isUserScrolling: Bool = false
     /// fullScreenCover 바인딩 상태.
-    var showFullPlayer: Bool = false
+    var showFullPlayer: Bool = false {
+        didSet {
+            if showFullPlayer {
+                revealedLineIndices = []
+            }
+        }
+    }
 
     /// 현재 재생 시간 기준으로 활성 가사 줄 인덱스를 계산한다.
     var currentLyricIndex: Int? {
@@ -30,24 +52,40 @@ final class PlayerViewModel {
 
     private let musicPlayerService: any MusicPlayerServiceProtocol
     private let lyricService: any LyricServiceProtocol
+    private let translatedLyricService: any TranslatedLyricServiceProtocol
     private var timer: Timer?
     private var userScrollTimer: Timer?
 
     init(
         musicPlayerService: any MusicPlayerServiceProtocol = MusicPlayerService(),
-        lyricService: any LyricServiceProtocol = LyricService()
+        lyricService: any LyricServiceProtocol = LyricService(),
+        translatedLyricService: any TranslatedLyricServiceProtocol = TranslatedLyricService()
     ) {
         self.musicPlayerService = musicPlayerService
         self.lyricService = lyricService
+        self.translatedLyricService = translatedLyricService
+
+        let savedMode = UserDefaults.standard.string(forKey: "translationMode")
+        self.translationMode = TranslationMode(rawValue: savedMode ?? "") ?? .simultaneous
     }
 
     /// deinit 대신 뷰의 onDisappear에서 호출하여 타이머를 정리한다.
-    /// (Swift 6에서 @MainActor 클래스의 deinit은 nonisolated이므로 격리 프로퍼티에 접근 불가)
     func stopTimers() {
         timer?.invalidate()
         timer = nil
         userScrollTimer?.invalidate()
         userScrollTimer = nil
+    }
+
+    // MARK: - 가림 모드 줄 토글
+
+    /// 가림 모드에서 특정 줄의 번역 공개를 토글한다.
+    func toggleReveal(at index: Int) {
+        if revealedLineIndices.contains(index) {
+            revealedLineIndices.remove(index)
+        } else {
+            revealedLineIndices.insert(index)
+        }
     }
 
     // MARK: - 재생 제어
@@ -58,6 +96,8 @@ final class PlayerViewModel {
         currentSong = song
         duration = song.duration ?? 0
         lyricState = .loading
+        translatedLines = nil
+        revealedLineIndices = []
         isUserScrolling = false
 
         do {
@@ -70,7 +110,6 @@ final class PlayerViewModel {
             isPlaying = false
         }
 
-        // 가사 fetch는 재생과 병렬로 수행 (재생 블로킹 없음)
         Task {
             await fetchLyrics(song: song)
         }
@@ -94,7 +133,7 @@ final class PlayerViewModel {
         }
     }
 
-    /// 슬라이더 드래그를 시작한다. 드래그 중에는 Timer 폴링 결과를 반영하지 않는다.
+    /// 슬라이더 드래그를 시작한다.
     func startDragging() {
         isDragging = true
     }
@@ -117,14 +156,12 @@ final class PlayerViewModel {
 
     // MARK: - 사용자 스크롤 제어
 
-    /// 사용자가 가사 영역을 수동 스크롤하기 시작했을 때 호출한다.
     func onUserScrollBegan() {
         isUserScrolling = true
         userScrollTimer?.invalidate()
         userScrollTimer = nil
     }
 
-    /// 사용자가 가사 영역 스크롤을 마쳤을 때 호출한다. 5초 후 자동 스크롤을 재개한다.
     func onUserScrollEnded() {
         userScrollTimer?.invalidate()
         userScrollTimer = Timer.scheduledTimer(withTimeInterval: 5.0, repeats: false) { [weak self] _ in
@@ -157,7 +194,6 @@ final class PlayerViewModel {
         currentTime = time
         sliderValue = time
 
-        // 재생 상태도 동기화
         let status = await musicPlayerService.playbackStatus
         isPlaying = status == .playing
     }
@@ -165,11 +201,44 @@ final class PlayerViewModel {
     // MARK: - 가사 Fetch
 
     private func fetchLyrics(song: Song) async {
+        // 1차: Supabase에서 원본 + 번역 조회
+        let supabaseResult = await translatedLyricService.fetchLyrics(appleMusicID: song.id)
+
+        if let originalLRC = supabaseResult.originalLRC {
+            let originalLines = parseLRC(originalLRC)
+            if !originalLines.isEmpty {
+                lyricState = .synced(originalLines)
+
+                if let translatedLRC = supabaseResult.translatedLRC {
+                    let tLines = parseLRC(translatedLRC)
+                    if tLines.count == originalLines.count {
+                        translatedLines = tLines
+                    }
+                }
+                return
+            }
+        }
+
+        // 2차: lrclib.net fallback
         let state = await lyricService.fetchLyrics(
             artist: song.artistName,
             track: song.title,
             duration: song.duration
         )
         lyricState = state
+        translatedLines = nil
+    }
+
+    /// LRC 형식 문자열을 파싱하여 LyricLine 배열로 반환한다.
+    private func parseLRC(_ lrc: String) -> [LyricLine] {
+        let pattern = /\[(\d{2}):(\d{2}\.\d{2})\]\s?(.*)/
+        return lrc.components(separatedBy: "\n").compactMap { line in
+            guard let match = line.firstMatch(of: pattern) else { return nil }
+            let minutes = Double(match.1) ?? 0
+            let seconds = Double(match.2) ?? 0
+            let timestamp = minutes * 60 + seconds
+            let text = String(match.3)
+            return LyricLine(timestamp: timestamp, text: text)
+        }
     }
 }

@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "file=\"$CLAUDE_FILE_PATH\"; if [[ \"$file\" == *.swift ]]; then xcrun -sdk iphonesimulator swiftc -typecheck \"$file\" 2>&1 | head -5 || true; fi"
+          }
+        ]
+      }
+    ]
+  }
+}
