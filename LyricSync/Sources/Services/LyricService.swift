@@ -34,6 +34,8 @@ actor LyricService: LyricServiceProtocol {
     /// 아티스트명과 곡명으로 가사를 조회하여 LyricState를 반환한다.
     /// 이 메서드는 throws 대신 LyricState로 에러를 포함하여 반환한다 (재생 블로킹 방지).
     func fetchLyrics(artist: String, track: String, duration: TimeInterval?) async -> LyricState {
+        AppLogger.info("lrclib 가사 조회: artist=\(artist), track=\(track)", category: .lyrics)
+
         guard var components = URLComponents(string: "https://lrclib.net/api/get") else {
             return .error("잘못된 URL입니다.")
         }
@@ -61,14 +63,19 @@ actor LyricService: LyricServiceProtocol {
                 return .error("서버 응답을 받지 못했습니다.")
             }
 
+            AppLogger.debug("lrclib 응답: status=\(httpResponse.statusCode)", category: .lyrics)
+
             switch httpResponse.statusCode {
             case 200:
                 break
             case 404:
+                AppLogger.info("lrclib: 가사 없음 (404)", category: .lyrics)
                 return .notFound
             case 429:
+                AppLogger.warn("lrclib: 429 rate limit", category: .lyrics)
                 return .error("요청이 너무 많습니다. 잠시 후 다시 시도해 주세요.")
             default:
+                AppLogger.error("lrclib: 서버 오류 \(httpResponse.statusCode)", category: .lyrics)
                 return .error("서버 오류가 발생했습니다. (코드: \(httpResponse.statusCode))")
             }
 

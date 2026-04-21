@@ -14,10 +14,13 @@ actor SearchService: SearchServiceProtocol {
         let trimmed = term.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return [] }
 
+        AppLogger.info("검색 시작: \"\(trimmed)\" (limit=\(limit))", category: .search)
+
         var request = MusicCatalogSearchRequest(term: trimmed, types: [MusicKit.Song.self])
         request.limit = limit
 
         let response = try await request.response()
+        AppLogger.debug("검색 결과: \(response.songs.count)곡", category: .search)
 
         return response.songs.map { mkSong -> Song in
             Song(

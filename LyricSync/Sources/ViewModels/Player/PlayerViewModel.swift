@@ -201,18 +201,29 @@ final class PlayerViewModel {
     // MARK: - 가사 Fetch
 
     private func fetchLyrics(song: Song) async {
+        AppLogger.info("가사 조회 시작: \(song.title) (id=\(song.id))", category: .lyrics)
+
         // 1차: Supabase에서 원본 + 번역 조회
         let supabaseResult = await translatedLyricService.fetchLyrics(appleMusicID: song.id)
 
+        AppLogger.debug("Supabase 결과: original=\(supabaseResult.originalLRC != nil), translated=\(supabaseResult.translatedLRC != nil)", category: .lyrics)
+
         if let originalLRC = supabaseResult.originalLRC {
             let originalLines = parseLRC(originalLRC)
+            AppLogger.debug("원본 LRC 파싱: \(originalLines.count)줄", category: .lyrics)
+
             if !originalLines.isEmpty {
                 lyricState = .synced(originalLines)
 
                 if let translatedLRC = supabaseResult.translatedLRC {
                     let tLines = parseLRC(translatedLRC)
+                    AppLogger.debug("번역 LRC 파싱: \(tLines.count)줄 (원본=\(originalLines.count)줄)", category: .lyrics)
+
                     if tLines.count == originalLines.count {
                         translatedLines = tLines
+                        AppLogger.info("번역 가사 설정 완료 → hasTranslation=true", category: .lyrics)
+                    } else {
+                        AppLogger.warn("번역 줄 수 불일치: 원본=\(originalLines.count), 번역=\(tLines.count) → 번역 무시", category: .lyrics)
                     }
                 }
                 return
@@ -220,6 +231,7 @@ final class PlayerViewModel {
         }
 
         // 2차: lrclib.net fallback
+        AppLogger.info("Supabase 실패/없음 → lrclib fallback", category: .lyrics)
         let state = await lyricService.fetchLyrics(
             artist: song.artistName,
             track: song.title,
@@ -227,6 +239,7 @@ final class PlayerViewModel {
         )
         lyricState = state
         translatedLines = nil
+        AppLogger.info("lrclib 결과: \(state)", category: .lyrics)
     }
 
     /// LRC 형식 문자열을 파싱하여 LyricLine 배열로 반환한다.
