@@ -1,7 +1,6 @@
 import SwiftUI
 
 /// Apple Music 인기 팝 차트 Top 50을 표시하는 메인 화면.
-/// NavigationStack 루트 뷰이며 권한 상태에 따라 분기 UI를 제공한다.
 struct ChartListView: View {
     @State private var viewModel = ChartViewModel()
     @Environment(PlayerViewModel.self) private var playerViewModel
@@ -22,7 +21,6 @@ struct ChartListView: View {
         }
         .navigationTitle("인기 팝 차트")
         .navigationBarTitleDisplayMode(.large)
-        .searchable(text: $viewModel.searchText, prompt: "곡 검색")
         .task {
             await viewModel.checkAuthorizationAndFetch()
         }
@@ -37,11 +35,47 @@ struct ChartListView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else if let errorMessage = viewModel.errorMessage {
             errorView(message: errorMessage)
-        } else if viewModel.isSearchActive {
-            searchResultsList
         } else {
-            songList
+            VStack(spacing: 0) {
+                // 상단 고정 검색바
+                searchBar
+
+                // 검색 결과 or 차트
+                if viewModel.isSearchActive {
+                    searchResultsList
+                } else {
+                    songList
+                }
+            }
         }
+    }
+
+    // MARK: - 상단 검색바
+
+    private var searchBar: some View {
+        HStack(spacing: 10) {
+            Image(systemName: "magnifyingglass")
+                .foregroundStyle(.secondary)
+
+            TextField("곡 검색", text: $viewModel.searchText)
+                .textFieldStyle(.plain)
+                .autocorrectionDisabled()
+
+            if !viewModel.searchText.isEmpty {
+                Button {
+                    viewModel.searchText = ""
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .foregroundStyle(.secondary)
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 10)
+        .background(Color(.systemGray6), in: RoundedRectangle(cornerRadius: 12))
+        .padding(.horizontal, 16)
+        .padding(.vertical, 8)
     }
 
     // MARK: - 차트 리스트
@@ -74,11 +108,13 @@ struct ChartListView: View {
                     ProgressView()
                     Spacer()
                 }
+                .listRowSeparator(.hidden)
             } else if viewModel.searchResults.isEmpty {
                 Text("검색 결과가 없습니다")
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity)
                     .padding(.top, 40)
+                    .listRowSeparator(.hidden)
             } else {
                 ForEach(viewModel.searchResults) { song in
                     NavigationLink(value: song) {
@@ -116,7 +152,6 @@ struct ChartListView: View {
                 }
             }
             .buttonStyle(.borderedProminent)
-            .accessibilityLabel("차트 다시 불러오기")
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
@@ -141,7 +176,6 @@ struct ChartListView: View {
                 }
             }
             .buttonStyle(.borderedProminent)
-            .accessibilityLabel("설정 앱에서 Apple Music 권한 허용")
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }

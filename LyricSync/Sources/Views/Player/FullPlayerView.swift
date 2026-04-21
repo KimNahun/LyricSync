@@ -10,27 +10,28 @@ struct FullPlayerView: View {
         @Bindable var vm = playerViewModel
 
         NavigationStack {
-            ScrollViewReader { proxy in
-                VStack(spacing: 0) {
-                    headerSection
-                    sliderSection
-                    playbackButton
+            VStack(spacing: 0) {
+                // 상단: 컴팩트 플레이어 바 (아트+곡정보+슬라이더 1줄)
+                compactPlayerBar
 
-                    // 번역 모드 토글 (번역이 있을 때만 표시)
-                    if playerViewModel.hasTranslation {
-                        translationModeToggle
-                    }
-
-                    lyricSection(proxy: proxy)
+                // 번역 모드 토글 (번역이 있을 때만)
+                if playerViewModel.hasTranslation {
+                    translationModeToggle
                 }
-                .padding(.horizontal, 20)
-                .onChange(of: playerViewModel.currentLyricIndex) { _, newIndex in
-                    guard let index = newIndex,
-                          !playerViewModel.isUserScrolling,
-                          !playerViewModel.isDragging else { return }
-                    withAnimation(.easeInOut(duration: 0.3)) {
-                        proxy.scrollTo(index, anchor: .center)
-                    }
+
+                Divider()
+
+                // 가사 영역 (나머지 전체)
+                ScrollViewReader { proxy in
+                    lyricSection(proxy: proxy)
+                        .onChange(of: playerViewModel.currentLyricIndex) { _, newIndex in
+                            guard let index = newIndex,
+                                  !playerViewModel.isUserScrolling,
+                                  !playerViewModel.isDragging else { return }
+                            withAnimation(.easeInOut(duration: 0.3)) {
+                                proxy.scrollTo(index, anchor: .center)
+                            }
+                        }
                 }
             }
             .navigationBarTitleDisplayMode(.inline)
@@ -49,104 +50,98 @@ struct FullPlayerView: View {
         }
     }
 
-    // MARK: - 상단 헤더
+    // MARK: - 컴팩트 플레이어 바 (1줄)
 
-    private var headerSection: some View {
-        VStack(spacing: 12) {
-            AsyncImage(url: playerViewModel.currentSong?.artworkURL) { image in
-                image
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-            } placeholder: {
-                Color(.systemFill)
-                    .overlay {
-                        Image(systemName: "music.note")
-                            .font(.title)
-                            .imageScale(.large)
-                            .foregroundStyle(.secondary)
-                    }
-            }
-            .frame(width: 220, height: 220)
-            .clipShape(RoundedRectangle(cornerRadius: 16))
-            .shadow(radius: 8)
-            .padding(.top, 8)
-            .accessibilityLabel("\(playerViewModel.currentSong?.title ?? "") 앨범 아트")
-
-            VStack(spacing: 4) {
-                Text(playerViewModel.currentSong?.title ?? "")
-                    .font(.title3.weight(.bold))
-                    .foregroundStyle(.primary)
-                    .multilineTextAlignment(.center)
-                    .accessibilityAddTraits(.isHeader)
-
-                Text(playerViewModel.currentSong?.artistName ?? "")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
-            }
-        }
-    }
-
-    // MARK: - 슬라이더
-
-    private var sliderSection: some View {
+    private var compactPlayerBar: some View {
         @Bindable var vm = playerViewModel
 
-        return VStack(spacing: 4) {
-            Slider(
-                value: $vm.sliderValue,
-                in: 0...(playerViewModel.duration > 0 ? playerViewModel.duration : 1),
-                onEditingChanged: { editing in
-                    if editing {
-                        playerViewModel.startDragging()
-                    } else {
-                        Task {
-                            await playerViewModel.stopDragging(to: playerViewModel.sliderValue)
+        return VStack(spacing: 8) {
+            HStack(spacing: 12) {
+                // 앨범 아트 (작게)
+                AsyncImage(url: playerViewModel.currentSong?.artworkURL) { image in
+                    image
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                } placeholder: {
+                    Color(.systemFill)
+                        .overlay {
+                            Image(systemName: "music.note")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                }
+                .frame(width: 56, height: 56)
+                .clipShape(RoundedRectangle(cornerRadius: 10))
+
+                // 곡 정보 + 재생 버튼
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(playerViewModel.currentSong?.title ?? "")
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(.primary)
+                        .lineLimit(1)
+
+                    Text(playerViewModel.currentSong?.artistName ?? "")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+                // 재생/일시정지
+                Button {
+                    Task {
+                        if playerViewModel.isPlaying {
+                            await playerViewModel.pause()
+                        } else {
+                            await playerViewModel.resume()
                         }
                     }
+                } label: {
+                    Image(systemName: playerViewModel.isPlaying ? "pause.circle.fill" : "play.circle.fill")
+                        .font(.title)
+                        .foregroundStyle(Color.accentColor)
                 }
-            )
-            .tint(.accentColor)
-            .accessibilityLabel("재생 위치 슬라이더")
-            .accessibilityValue(TimeFormatUtil.format(playerViewModel.currentTime))
-
-            HStack {
-                Text(TimeFormatUtil.format(playerViewModel.currentTime))
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .monospacedDigit()
-
-                Spacer()
-
-                Text(TimeFormatUtil.format(playerViewModel.duration))
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .monospacedDigit()
+                .frame(width: 44, height: 44)
+                .accessibilityLabel(playerViewModel.isPlaying ? "일시정지" : "재생")
             }
-        }
-        .padding(.top, 16)
-    }
+            .padding(.horizontal, 16)
+            .padding(.top, 8)
 
-    // MARK: - 재생 버튼
+            // 슬라이더
+            VStack(spacing: 2) {
+                Slider(
+                    value: $vm.sliderValue,
+                    in: 0...(playerViewModel.duration > 0 ? playerViewModel.duration : 1),
+                    onEditingChanged: { editing in
+                        if editing {
+                            playerViewModel.startDragging()
+                        } else {
+                            Task {
+                                await playerViewModel.stopDragging(to: playerViewModel.sliderValue)
+                            }
+                        }
+                    }
+                )
+                .tint(.accentColor)
 
-    private var playbackButton: some View {
-        Button {
-            Task {
-                if playerViewModel.isPlaying {
-                    await playerViewModel.pause()
-                } else {
-                    await playerViewModel.resume()
+                HStack {
+                    Text(TimeFormatUtil.format(playerViewModel.currentTime))
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                        .monospacedDigit()
+
+                    Spacer()
+
+                    Text(TimeFormatUtil.format(playerViewModel.duration))
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                        .monospacedDigit()
                 }
             }
-        } label: {
-            Image(systemName: playerViewModel.isPlaying ? "pause.circle.fill" : "play.circle.fill")
-                .font(.largeTitle)
-                .imageScale(.large)
-                .foregroundStyle(Color.accentColor)
+            .padding(.horizontal, 16)
+            .padding(.bottom, 8)
         }
-        .frame(minWidth: 60, minHeight: 60)
-        .padding(.vertical, 12)
-        .accessibilityLabel(playerViewModel.isPlaying ? "일시정지" : "재생")
+        .background(Color(.systemBackground))
     }
 
     // MARK: - 번역 모드 토글
@@ -155,21 +150,22 @@ struct FullPlayerView: View {
         @Bindable var vm = playerViewModel
 
         return Picker("번역 모드", selection: $vm.translationMode) {
-            Text("동시 표시").tag(TranslationMode.simultaneous)
-            Text("가림 모드").tag(TranslationMode.hidden)
+            Label("동시 표시", systemImage: "text.alignleft")
+                .labelStyle(.titleOnly)
+                .tag(TranslationMode.simultaneous)
+            Label("가림 모드", systemImage: "eye.slash")
+                .labelStyle(.titleOnly)
+                .tag(TranslationMode.hidden)
         }
         .pickerStyle(.segmented)
-        .padding(.bottom, 8)
-        .accessibilityLabel("번역 표시 모드 선택")
+        .padding(.horizontal, 16)
+        .padding(.vertical, 6)
     }
 
     // MARK: - 가사 영역
 
     @ViewBuilder
     private func lyricSection(proxy: ScrollViewProxy) -> some View {
-        Divider()
-            .padding(.bottom, 8)
-
         switch playerViewModel.lyricState {
         case .loading:
             ProgressView("가사 불러오는 중...")
@@ -185,7 +181,7 @@ struct FullPlayerView: View {
                     .foregroundStyle(.primary)
                     .multilineTextAlignment(.center)
                     .frame(maxWidth: .infinity)
-                    .padding(.bottom, 80)
+                    .padding(20)
             }
 
         case .instrumental:
@@ -203,9 +199,9 @@ struct FullPlayerView: View {
         let translatedLines = playerViewModel.translatedLines
 
         return ScrollView {
-            LazyVStack(spacing: 4) {
+            LazyVStack(spacing: 6) {
                 ForEach(Array(lines.enumerated()), id: \.offset) { index, line in
-                    VStack(spacing: 2) {
+                    VStack(spacing: 3) {
                         // 원본 가사
                         LyricLineView(
                             line: line,
@@ -229,8 +225,9 @@ struct FullPlayerView: View {
                     .id(index)
                 }
             }
-            .padding(.vertical, 12)
-            .padding(.bottom, 80)
+            .padding(.vertical, 16)
+            .padding(.horizontal, 20)
+            .padding(.bottom, 60)
         }
         .simultaneousGesture(
             DragGesture(minimumDistance: 5)
@@ -247,48 +244,48 @@ struct FullPlayerView: View {
 
     @ViewBuilder
     private func translatedLineView(text: String, index: Int, isActive: Bool) -> some View {
+        let isRevealed = playerViewModel.revealedLineIndices.contains(index)
+
         switch playerViewModel.translationMode {
         case .simultaneous:
-            // 동시 표시: 항상 번역 보임
             Text(text)
-                .font(.caption)
-                .foregroundStyle(isActive ? Color.primary.opacity(0.7) : Color.secondary.opacity(0.5))
+                .font(.footnote)
+                .foregroundStyle(isActive ? Color.accentColor.opacity(0.8) : Color.secondary.opacity(0.5))
                 .multilineTextAlignment(.center)
                 .frame(maxWidth: .infinity)
-                .padding(.bottom, 4)
+                .padding(.bottom, 2)
 
         case .hidden:
-            // 가림 모드: 눈 버튼으로 개별 공개
-            HStack(spacing: 4) {
-                if playerViewModel.revealedLineIndices.contains(index) {
-                    Text(text)
-                        .font(.caption)
-                        .foregroundStyle(isActive ? Color.primary.opacity(0.7) : Color.secondary.opacity(0.5))
-                        .multilineTextAlignment(.center)
-                        .frame(maxWidth: .infinity)
-                        .transition(.opacity)
-                } else {
-                    Text("· · · · ·")
-                        .font(.caption)
-                        .foregroundStyle(.secondary.opacity(0.3))
-                        .frame(maxWidth: .infinity)
+            Button {
+                withAnimation(.easeInOut(duration: 0.2)) {
+                    playerViewModel.toggleReveal(at: index)
                 }
-
-                // 눈 버튼 — 자동 스크롤을 중지시키지 않음
-                Button {
-                    withAnimation(.easeInOut(duration: 0.2)) {
-                        playerViewModel.toggleReveal(at: index)
+            } label: {
+                HStack(spacing: 6) {
+                    if isRevealed {
+                        Text(text)
+                            .font(.footnote)
+                            .foregroundStyle(isActive ? Color.accentColor.opacity(0.8) : Color.secondary.opacity(0.6))
+                            .multilineTextAlignment(.center)
+                            .frame(maxWidth: .infinity)
+                            .transition(.opacity.combined(with: .scale(scale: 0.95)))
+                    } else {
+                        Text("번역 보기")
+                            .font(.caption2)
+                            .foregroundStyle(.secondary.opacity(0.4))
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 4)
+                            .background(
+                                Capsule()
+                                    .fill(Color(.systemGray5))
+                            )
                     }
-                } label: {
-                    Image(systemName: playerViewModel.revealedLineIndices.contains(index) ? "eye.fill" : "eye.slash")
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
-                        .frame(width: 28, height: 28)
                 }
-                .buttonStyle(.plain)
-                .accessibilityLabel(playerViewModel.revealedLineIndices.contains(index) ? "번역 숨기기" : "번역 보기")
+                .frame(maxWidth: .infinity)
             }
-            .padding(.bottom, 4)
+            .buttonStyle(.plain)
+            .padding(.bottom, 2)
+            .accessibilityLabel(isRevealed ? "번역 숨기기" : "번역 보기")
         }
     }
 
@@ -304,6 +301,5 @@ struct FullPlayerView: View {
                 .multilineTextAlignment(.center)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .padding(.bottom, 80)
     }
 }
