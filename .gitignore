@@ -41,3 +41,5 @@ LyricSync/LyricSync.xcodeproj/project.xcworkspace/xcuserdata/
 # Secrets (Supabase keys, API keys)
 LyricSync/Sources/Secrets.swift
 **/Secrets.swift
+**/Secrets.xcconfig
+scripts/

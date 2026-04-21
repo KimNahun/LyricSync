@@ -3,7 +3,7 @@
 ## Base URL
 
 ```
-https://REDACTED_SUPABASE_HOST/rest/v1
+{SUPABASE_URL} (Secrets.xcconfig에서 관리)
 ```
 
 ## 인증 (공통 헤더)
@@ -30,7 +30,7 @@ GET /songs?apple_music_id=eq.{APPLE_MUSIC_ID}&select=id,title,artist,lyrics(type
 ### 예시
 
 ```bash
-curl "https://REDACTED_SUPABASE_HOST/rest/v1/songs?apple_music_id=eq.1440661545&select=id,title,artist,lyrics(type,lang,content,format)" \
+curl "{SUPABASE_URL} (Secrets.xcconfig에서 관리)/songs?apple_music_id=eq.1440661545&select=id,title,artist,lyrics(type,lang,content,format)" \
   -H "apikey: {ANON_KEY}" \
   -H "Authorization: Bearer {ANON_KEY}"
 ```
@@ -104,39 +104,7 @@ GET /songs?lyrics_status=eq.found&source_lang=neq.ko&select=id,apple_music_id,ti
 
 ---
 
-## 4. 번역 여부 배치 조회 (iOS 앱 → 곡 리스트 배지용)
-
-여러 곡의 번역 여부를 한 번에 확인. 차트/검색 결과에서 배지 표시용.
-
-```
-GET /songs?apple_music_id=in.("1440661545","1709456823","1698234511")&select=apple_music_id,lyrics(type,lang)
-```
-
-### Response
-
-```json
-[
-  {
-    "apple_music_id": "1440661545",
-    "lyrics": [
-      {"type": "original", "lang": "en"},
-      {"type": "translated", "lang": "ko"}
-    ]
-  },
-  {
-    "apple_music_id": "1709456823",
-    "lyrics": []
-  }
-]
-```
-
-- `lyrics`에 `type=translated`가 있으면 → 번역 배지 표시
-- `lyrics`가 빈 배열이거나 곡이 응답에 없으면 → 배지 없음
-- content는 포함하지 않음 (가볍게 type/lang만 조회)
-
----
-
-## 5. 특정 storefront 곡만 조회
+## 4. 특정 storefront 곡만 조회
 
 ```
 # US Pop만
@@ -152,25 +120,28 @@ GET /songs?source_storefront=eq.jp&select=id,apple_music_id,title,artist
 
 ### songs
 
-| 필드 | 타입 | 설명 |
-|---|---|---|
-| id | integer | 내부 ID |
-| apple_music_id | string | Apple Music 곡 ID |
-| title | string | 곡 제목 |
-| artist | string | 아티스트명 |
-| duration_ms | integer | 곡 길이 (밀리초) |
-| source_storefront | string | `us` 또는 `jp` |
-| source_lang | string | `en`, `ja`, `ko` |
-| lyrics_status | string | `pending`, `found`, `not_found` |
+| 필드 | 타입 | Nullable | 설명 |
+|---|---|---|---|
+| id | integer | NO | 내부 ID (auto increment) |
+| apple_music_id | string | NO | Apple Music 곡 ID |
+| title | string | NO | 곡 제목 |
+| artist | string | NO | 아티스트명 |
+| duration_ms | integer | **YES** | 곡 길이 (밀리초). Apple Music에서 제공 안 하면 null |
+| source_storefront | string | NO | `us` 또는 `jp` |
+| source_lang | string | **YES** | `en`, `ja`, `ko`. 가사 수집 전(pending)이면 null |
+| lyrics_status | string | NO | `pending`, `found`, `not_found` (기본값: `pending`) |
+| created_at | string (ISO 8601) | NO | 생성 시각 |
 
 ### lyrics
 
-| 필드 | 타입 | 설명 |
-|---|---|---|
-| type | string | `original` 또는 `translated` |
-| lang | string | 언어 코드: `en`, `ja`, `ko` |
-| format | string | `synced` (LRC 타임스탬프) 또는 `plain` |
-| content | string | 가사 본문 (LRC 형식) |
+| 필드 | 타입 | Nullable | 설명 |
+|---|---|---|---|
+| type | string | NO | `original` 또는 `translated` |
+| lang | string | NO | 언어 코드: `en`, `ja`, `ko` |
+| format | string | NO | `synced` (LRC 타임스탬프) 또는 `plain` |
+| content | string | NO | 가사 본문 (LRC 형식) |
+| translator | string | **YES** | 번역기명. original이면 null, translated면 `claude-opus-4-6` 등 |
+| version | integer | NO | 번역 버전 (기본값: 1) |
 
 ---
 

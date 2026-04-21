@@ -30,6 +30,9 @@ targets:
       properties:
         com.apple.developer.applesignin:
           - Default
+    configFiles:
+      Debug: Secrets.xcconfig
+      Release: Secrets.xcconfig
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.nahun.LyricSync
