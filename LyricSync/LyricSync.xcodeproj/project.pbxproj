@@ -234,11 +234,11 @@
 				};
 			};
 			buildConfigurationList = 0A43CACACB4BFA004470CA9E /* Build configuration list for PBXProject "LyricSync" */;
-			developmentRegion = en;
+			developmentRegion = ko;
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				Base,
-				en,
+				ko,
 			);
 			mainGroup = 86ABACFDC80424825D8A844E;
 			minimizedProjectReferenceProxies = 1;
