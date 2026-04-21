@@ -37,15 +37,18 @@ struct ChartListView: View {
             errorView(message: errorMessage)
         } else {
             VStack(spacing: 0) {
-                // 상단 고정 검색바
                 searchBar
+                Divider()
 
-                // 검색 결과 or 차트
                 if viewModel.isSearchActive {
                     searchResultsList
                 } else {
                     songList
                 }
+            }
+            .onTapGesture {
+                // 바깥 탭 시 키보드 dismiss
+                UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
             }
         }
     }
@@ -56,24 +59,29 @@ struct ChartListView: View {
         HStack(spacing: 10) {
             Image(systemName: "magnifyingglass")
                 .foregroundStyle(.secondary)
+                .font(.subheadline)
 
-            TextField("곡 검색", text: $viewModel.searchText)
+            TextField("곡명 또는 아티스트 검색", text: $viewModel.searchText)
                 .textFieldStyle(.plain)
+                .font(.subheadline)
                 .autocorrectionDisabled()
+                .submitLabel(.search)
 
             if !viewModel.searchText.isEmpty {
                 Button {
                     viewModel.searchText = ""
+                    UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
                 } label: {
                     Image(systemName: "xmark.circle.fill")
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.tertiary)
+                        .font(.subheadline)
                 }
                 .buttonStyle(.plain)
             }
         }
         .padding(.horizontal, 12)
-        .padding(.vertical, 10)
-        .background(Color(.systemGray6), in: RoundedRectangle(cornerRadius: 12))
+        .padding(.vertical, 9)
+        .background(Color(.tertiarySystemFill), in: RoundedRectangle(cornerRadius: 10))
         .padding(.horizontal, 16)
         .padding(.vertical, 8)
     }
@@ -81,52 +89,65 @@ struct ChartListView: View {
     // MARK: - 차트 리스트
 
     private var songList: some View {
-        List(viewModel.songs) { song in
-            NavigationLink(value: song) {
-                SongRowView(
-                    song: song,
-                    hasTranslation: viewModel.hasTranslation(for: song)
-                )
+        ScrollView {
+            LazyVStack(spacing: 0) {
+                ForEach(viewModel.songs) { song in
+                    NavigationLink(value: song) {
+                        SongRowView(
+                            song: song,
+                            hasTranslation: viewModel.hasTranslation(for: song)
+                        )
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 8)
+                    }
+                    .buttonStyle(.plain)
+
+                    Divider()
+                        .padding(.leading, 84)
+                }
             }
         }
-        .listStyle(.plain)
         .navigationDestination(for: Song.self) { song in
             SongDetailView(song: song)
-        }
-        .refreshable {
-            await viewModel.fetchCharts()
         }
     }
 
     // MARK: - 검색 결과 리스트
 
     private var searchResultsList: some View {
-        List {
-            if viewModel.isSearching {
-                HStack {
-                    Spacer()
+        ScrollView {
+            LazyVStack(spacing: 0) {
+                if viewModel.isSearching {
                     ProgressView()
-                    Spacer()
-                }
-                .listRowSeparator(.hidden)
-            } else if viewModel.searchResults.isEmpty {
-                Text("검색 결과가 없습니다")
-                    .foregroundStyle(.secondary)
-                    .frame(maxWidth: .infinity)
-                    .padding(.top, 40)
-                    .listRowSeparator(.hidden)
-            } else {
-                ForEach(viewModel.searchResults) { song in
-                    NavigationLink(value: song) {
-                        SongRowView(
-                            song: song,
-                            hasTranslation: viewModel.hasTranslation(for: song)
-                        )
+                        .padding(.top, 40)
+                } else if viewModel.searchResults.isEmpty && viewModel.isSearchActive {
+                    VStack(spacing: 8) {
+                        Image(systemName: "magnifyingglass")
+                            .font(.title2)
+                            .foregroundStyle(.tertiary)
+                        Text("검색 결과가 없습니다")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    }
+                    .padding(.top, 60)
+                } else {
+                    ForEach(viewModel.searchResults) { song in
+                        NavigationLink(value: song) {
+                            SongRowView(
+                                song: song,
+                                hasTranslation: viewModel.hasTranslation(for: song)
+                            )
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 8)
+                        }
+                        .buttonStyle(.plain)
+
+                        Divider()
+                            .padding(.leading, 84)
                     }
                 }
             }
         }
-        .listStyle(.plain)
         .navigationDestination(for: Song.self) { song in
             SongDetailView(song: song)
         }
@@ -147,9 +168,7 @@ struct ChartListView: View {
                 .padding(.horizontal)
 
             Button("다시 시도") {
-                Task {
-                    await viewModel.fetchCharts()
-                }
+                Task { await viewModel.fetchCharts() }
             }
             .buttonStyle(.borderedProminent)
         }

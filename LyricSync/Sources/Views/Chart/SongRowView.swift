@@ -1,7 +1,6 @@
 import SwiftUI
 
-/// 차트 리스트에서 개별 곡을 표시하는 행 컴포넌트.
-/// 순위, 앨범 아트 썸네일, 곡명, 아티스트명, 번역 배지를 표시한다.
+/// 차트/검색 리스트에서 개별 곡을 표시하는 행 컴포넌트.
 struct SongRowView: View {
     let song: Song
     var hasTranslation: Bool = false
@@ -11,10 +10,9 @@ struct SongRowView: View {
             // 순위
             if let rank = song.rank {
                 Text("\(rank)")
-                    .font(.headline)
+                    .font(.footnote.weight(.medium).monospacedDigit())
                     .foregroundStyle(.secondary)
-                    .frame(minWidth: 28, alignment: .trailing)
-                    .accessibilityLabel("순위 \(rank)위")
+                    .frame(width: 24, alignment: .trailing)
             }
 
             // 앨범 아트
@@ -23,25 +21,25 @@ struct SongRowView: View {
                     .resizable()
                     .aspectRatio(contentMode: .fill)
             } placeholder: {
-                Color(.systemFill)
+                Color(.tertiarySystemFill)
                     .overlay {
                         Image(systemName: "music.note")
-                            .foregroundStyle(.secondary)
+                            .font(.caption2)
+                            .foregroundStyle(.tertiary)
                     }
             }
-            .frame(width: 52, height: 52)
+            .frame(width: 48, height: 48)
             .clipShape(RoundedRectangle(cornerRadius: 8))
-            .accessibilityHidden(true)
 
             // 곡 정보
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: 3) {
                 Text(song.title)
-                    .font(.body)
+                    .font(.subheadline.weight(.medium))
                     .foregroundStyle(.primary)
                     .lineLimit(1)
 
                 Text(song.artistName)
-                    .font(.subheadline)
+                    .font(.caption)
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
             }
@@ -49,16 +47,23 @@ struct SongRowView: View {
 
             // 번역 배지
             if hasTranslation {
-                Text("한")
-                    .font(.caption2.weight(.bold))
-                    .foregroundStyle(.white)
-                    .padding(.horizontal, 6)
-                    .padding(.vertical, 2)
-                    .background(Color.accentColor, in: RoundedRectangle(cornerRadius: 4))
-                    .accessibilityLabel("한국어 번역 있음")
+                Text("번역")
+                    .font(.caption2.weight(.semibold))
+                    .foregroundStyle(Color.accentColor)
+                    .padding(.horizontal, 7)
+                    .padding(.vertical, 3)
+                    .background(
+                        Color.accentColor.opacity(0.12),
+                        in: Capsule()
+                    )
             }
+
+            // 셰브론
+            Image(systemName: "chevron.right")
+                .font(.caption2)
+                .foregroundStyle(.quaternary)
         }
-        .padding(.vertical, 4)
+        .contentShape(Rectangle())
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(song.rank.map { "\($0)위, " } ?? "")\(song.title), \(song.artistName)\(hasTranslation ? ", 번역 있음" : "")")
     }

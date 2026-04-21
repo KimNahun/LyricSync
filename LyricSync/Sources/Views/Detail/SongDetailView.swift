@@ -5,6 +5,8 @@ import SwiftUI
 struct SongDetailView: View {
     let song: Song
     @Environment(PlayerViewModel.self) private var playerViewModel
+    @Environment(\.dismiss) private var dismiss
+    @State private var dragOffset: CGFloat = 0
 
     private var isCurrentSong: Bool {
         playerViewModel.currentSong?.id == song.id
@@ -16,6 +18,9 @@ struct SongDetailView: View {
 
     var body: some View {
         VStack(spacing: 0) {
+            // 드래그 핸들
+            dragHandle
+
             // 상단: 컴팩트 곡 정보 + 재생 버튼
             compactHeader
 
@@ -30,6 +35,34 @@ struct SongDetailView: View {
         }
         .navigationTitle(song.title)
         .navigationBarTitleDisplayMode(.inline)
+        .offset(y: max(0, dragOffset))
+        .gesture(
+            DragGesture()
+                .onChanged { value in
+                    if value.translation.height > 0 {
+                        dragOffset = value.translation.height
+                    }
+                }
+                .onEnded { value in
+                    if value.translation.height > 120 {
+                        dismiss()
+                    } else {
+                        withAnimation(.spring(response: 0.3)) {
+                            dragOffset = 0
+                        }
+                    }
+                }
+        )
+    }
+
+    // MARK: - 드래그 핸들
+
+    private var dragHandle: some View {
+        RoundedRectangle(cornerRadius: 2.5)
+            .fill(Color(.tertiarySystemFill))
+            .frame(width: 36, height: 5)
+            .padding(.top, 8)
+            .padding(.bottom, 4)
     }
 
     // MARK: - 컴팩트 헤더 (1줄)
@@ -42,14 +75,14 @@ struct SongDetailView: View {
                     .resizable()
                     .aspectRatio(contentMode: .fill)
             } placeholder: {
-                Color(.systemFill)
+                Color(.tertiarySystemFill)
                     .overlay {
                         Image(systemName: "music.note")
                             .font(.caption)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(.tertiary)
                     }
             }
-            .frame(width: 52, height: 52)
+            .frame(width: 48, height: 48)
             .clipShape(RoundedRectangle(cornerRadius: 8))
 
             // 곡 정보
@@ -63,13 +96,6 @@ struct SongDetailView: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
-
-                if let albumTitle = song.albumTitle {
-                    Text(albumTitle)
-                        .font(.caption2)
-                        .foregroundStyle(.tertiary)
-                        .lineLimit(1)
-                }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
 
@@ -93,7 +119,7 @@ struct SongDetailView: View {
             .accessibilityLabel(isPlaying ? "일시정지" : "재생")
         }
         .padding(.horizontal, 16)
-        .padding(.vertical, 10)
+        .padding(.vertical, 8)
     }
 
     // MARK: - 현재 재생 중인 곡의 가사
@@ -157,7 +183,7 @@ struct SongDetailView: View {
             }
             .padding(.vertical, 16)
             .padding(.horizontal, 20)
-            .padding(.bottom, 60)
+            .padding(.bottom, 80)
         }
         .simultaneousGesture(
             DragGesture(minimumDistance: 5)
@@ -172,12 +198,12 @@ struct SongDetailView: View {
         VStack(spacing: 16) {
             Spacer()
 
-            Image(systemName: "music.note")
-                .font(.system(size: 40))
-                .foregroundStyle(.secondary)
+            Image(systemName: "play.circle")
+                .font(.system(size: 44))
+                .foregroundStyle(.tertiary)
 
             Text("재생 버튼을 눌러\n가사를 확인하세요")
-                .font(.body)
+                .font(.subheadline)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
 
@@ -189,10 +215,10 @@ struct SongDetailView: View {
     private func lyricMessageView(icon: String, message: String) -> some View {
         VStack(spacing: 12) {
             Image(systemName: icon)
-                .font(.largeTitle)
-                .foregroundStyle(.secondary)
+                .font(.title)
+                .foregroundStyle(.tertiary)
             Text(message)
-                .font(.body)
+                .font(.subheadline)
                 .foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)

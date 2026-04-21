@@ -1,8 +1,6 @@
 import SwiftUI
 
 /// 모든 화면 하단에 고정 표시되는 소형 플레이어.
-/// .safeAreaInset(edge: .bottom)으로 NavigationStack 밖에서 주입된다.
-/// 탭하면 fullScreenCover로 FullPlayerView를 열어 보인다.
 struct MiniPlayerView: View {
     @Environment(PlayerViewModel.self) private var playerViewModel
 
@@ -23,24 +21,24 @@ struct MiniPlayerView: View {
             .frame(height: 2)
 
             HStack(spacing: 12) {
-                // 앨범 아트 (소)
+                // 앨범 아트
                 AsyncImage(url: playerViewModel.currentSong?.artworkURL) { image in
                     image
                         .resizable()
                         .aspectRatio(contentMode: .fill)
                 } placeholder: {
-                    Color(.systemFill)
+                    Color(.tertiarySystemFill)
                         .overlay {
                             Image(systemName: "music.note")
-                                .foregroundStyle(.secondary)
+                                .font(.caption2)
+                                .foregroundStyle(.tertiary)
                         }
                 }
-                .frame(width: 44, height: 44)
+                .frame(width: 40, height: 40)
                 .clipShape(RoundedRectangle(cornerRadius: 6))
-                .accessibilityHidden(true)
 
                 // 곡 정보
-                VStack(alignment: .leading, spacing: 2) {
+                VStack(alignment: .leading, spacing: 1) {
                     Text(playerViewModel.currentSong?.title ?? "")
                         .font(.subheadline.weight(.medium))
                         .foregroundStyle(.primary)
@@ -53,7 +51,7 @@ struct MiniPlayerView: View {
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
 
-                // 재생/일시정지 버튼
+                // 재생/일시정지
                 Button {
                     Task {
                         if playerViewModel.isPlaying {
@@ -64,23 +62,19 @@ struct MiniPlayerView: View {
                     }
                 } label: {
                     Image(systemName: playerViewModel.isPlaying ? "pause.fill" : "play.fill")
-                        .font(.title2)
+                        .font(.body.weight(.semibold))
                         .foregroundStyle(.primary)
-                        .frame(width: 44, height: 44)
+                        .frame(width: 40, height: 40)
                 }
-                .accessibilityLabel(playerViewModel.isPlaying ? "일시정지" : "재생")
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 10)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 8)
         }
-        .background(.regularMaterial)
+        .background(.ultraThinMaterial)
         .contentShape(Rectangle())
         .onTapGesture {
             playerViewModel.showFullPlayer = true
         }
-        .accessibilityElement(children: .contain)
-        .accessibilityLabel("미니 플레이어")
-        .accessibilityHint("탭하면 전체 플레이어가 열립니다")
         .fullScreenCover(isPresented: $vm.showFullPlayer) {
             FullPlayerView()
         }
