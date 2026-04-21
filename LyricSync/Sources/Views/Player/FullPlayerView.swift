@@ -77,20 +77,7 @@ struct FullPlayerView: View {
         return VStack(spacing: 8) {
             HStack(spacing: 12) {
                 // 앨범 아트 (작게)
-                AsyncImage(url: playerViewModel.currentSong?.artworkURL) { image in
-                    image
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                } placeholder: {
-                    Color(.systemFill)
-                        .overlay {
-                            Image(systemName: "music.note")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                        }
-                }
-                .frame(width: 56, height: 56)
-                .clipShape(RoundedRectangle(cornerRadius: 10))
+                CachedAsyncImage(url: playerViewModel.currentSong?.artworkURL, size: 56, cornerRadius: 10)
 
                 // 곡 정보 + 재생 버튼
                 VStack(alignment: .leading, spacing: 2) {

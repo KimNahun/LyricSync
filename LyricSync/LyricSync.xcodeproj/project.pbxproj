@@ -24,6 +24,7 @@
 		803835335A7B55F429E5A02F /* MiniPlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DDE2B5B5E6CD74D6200139F /* MiniPlayerView.swift */; };
 		880C6B6C35A5F630B2F0CACE /* PlayerViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 814EB36A95525FEF0AA5EE5C /* PlayerViewModel.swift */; };
 		94B898778F6A5D0CD25C51E8 /* AppLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51191FABDEDDDBC288730464 /* AppLogger.swift */; };
+		953746B690527AAB8AB16E33 /* CachedAsyncImage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4823F67DD5B720B443112701 /* CachedAsyncImage.swift */; };
 		9C77FE40D5CE2515F7D3DF30 /* AuthService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76411C69CC5C9D7291CE0366 /* AuthService.swift */; };
 		9CA730EA2609CD7F0C853403 /* LyricLine.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE53BB3FCBC7E647879DD6D3 /* LyricLine.swift */; };
 		AC33964236729C888B72A1D9 /* SongDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 45088F3D5FBC84C7CA6FB878 /* SongDetailView.swift */; };
@@ -41,6 +42,7 @@
 		4078ADD2CBB2D795511A9146 /* FullPlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FullPlayerView.swift; sourceTree = "<group>"; };
 		410838B638613B640B2C35EA /* LyricSyncApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LyricSyncApp.swift; sourceTree = "<group>"; };
 		45088F3D5FBC84C7CA6FB878 /* SongDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SongDetailView.swift; sourceTree = "<group>"; };
+		4823F67DD5B720B443112701 /* CachedAsyncImage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CachedAsyncImage.swift; sourceTree = "<group>"; };
 		4C84505F86BCEB8EC3E6FA0B /* ChartViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChartViewModel.swift; sourceTree = "<group>"; };
 		51191FABDEDDDBC288730464 /* AppLogger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLogger.swift; sourceTree = "<group>"; };
 		5176444F83B7B1D25CD87FDD /* TranslationMode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranslationMode.swift; sourceTree = "<group>"; };
@@ -215,6 +217,7 @@
 		F1901FC45B7EF5C019C7E0E1 /* Components */ = {
 			isa = PBXGroup;
 			children = (
+				4823F67DD5B720B443112701 /* CachedAsyncImage.swift */,
 				71F7FE273C0557D6FB8050D8 /* LyricLineView.swift */,
 			);
 			path = Components;
@@ -289,6 +292,7 @@
 			files = (
 				94B898778F6A5D0CD25C51E8 /* AppLogger.swift in Sources */,
 				9C77FE40D5CE2515F7D3DF30 /* AuthService.swift in Sources */,
+				953746B690527AAB8AB16E33 /* CachedAsyncImage.swift in Sources */,
 				3924F083ED2D4DB4B38B9E6B /* ChartListView.swift in Sources */,
 				276AD4288F29B3FD49591FC0 /* ChartService.swift in Sources */,
 				DF625431718CEEBDD6AC3446 /* ChartViewModel.swift in Sources */,

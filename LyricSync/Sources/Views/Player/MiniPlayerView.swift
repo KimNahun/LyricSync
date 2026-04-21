@@ -22,20 +22,7 @@ struct MiniPlayerView: View {
 
             HStack(spacing: 12) {
                 // 앨범 아트
-                AsyncImage(url: playerViewModel.currentSong?.artworkURL) { image in
-                    image
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                } placeholder: {
-                    Color(.tertiarySystemFill)
-                        .overlay {
-                            Image(systemName: "music.note")
-                                .font(.caption2)
-                                .foregroundStyle(.tertiary)
-                        }
-                }
-                .frame(width: 40, height: 40)
-                .clipShape(RoundedRectangle(cornerRadius: 6))
+                CachedAsyncImage(url: playerViewModel.currentSong?.artworkURL, size: 40, cornerRadius: 6)
 
                 // 곡 정보
                 VStack(alignment: .leading, spacing: 1) {

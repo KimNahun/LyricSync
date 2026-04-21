@@ -63,20 +63,7 @@ struct SongDetailView: View {
         return VStack(spacing: 6) {
             HStack(spacing: 12) {
                 // 앨범 아트
-                AsyncImage(url: song.artworkURL) { image in
-                    image
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                } placeholder: {
-                    Color(.tertiarySystemFill)
-                        .overlay {
-                            Image(systemName: "music.note")
-                                .font(.caption)
-                                .foregroundStyle(.tertiary)
-                        }
-                }
-                .frame(width: 52, height: 52)
-                .clipShape(RoundedRectangle(cornerRadius: 8))
+                CachedAsyncImage(url: song.artworkURL, size: 52)
 
                 // 곡 정보
                 VStack(alignment: .leading, spacing: 2) {

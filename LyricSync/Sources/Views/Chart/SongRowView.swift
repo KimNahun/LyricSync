@@ -16,20 +16,7 @@ struct SongRowView: View {
             }
 
             // 앨범 아트
-            AsyncImage(url: song.artworkURL) { image in
-                image
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-            } placeholder: {
-                Color(.tertiarySystemFill)
-                    .overlay {
-                        Image(systemName: "music.note")
-                            .font(.caption2)
-                            .foregroundStyle(.tertiary)
-                    }
-            }
-            .frame(width: 48, height: 48)
-            .clipShape(RoundedRectangle(cornerRadius: 8))
+            CachedAsyncImage(url: song.artworkURL, size: 48)
 
             // 곡 정보
             VStack(alignment: .leading, spacing: 3) {
