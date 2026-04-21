@@ -14,6 +14,15 @@ struct Song: Identifiable, Sendable, Hashable {
     let rank: Int?
     /// 재생 시 MusicKit Song 재조회에 사용하는 원본 ID.
     let musicKitID: MusicItemID
+    /// lrclib 가사 조회용 영어 제목. nil이면 title을 사용.
+    var englishTitle: String?
+    /// lrclib 가사 조회용 영어 아티스트명. nil이면 artistName을 사용.
+    var englishArtistName: String?
+
+    /// 가사 조회에 사용할 제목 (영어 우선)
+    var lrcTitle: String { englishTitle ?? title }
+    /// 가사 조회에 사용할 아티스트명 (영어 우선)
+    var lrcArtistName: String { englishArtistName ?? artistName }
 
     init(
         id: String,
@@ -23,7 +32,9 @@ struct Song: Identifiable, Sendable, Hashable {
         artworkURL: URL?,
         duration: TimeInterval?,
         rank: Int?,
-        musicKitID: MusicItemID
+        musicKitID: MusicItemID,
+        englishTitle: String? = nil,
+        englishArtistName: String? = nil
     ) {
         self.id = id
         self.title = title
@@ -33,6 +44,8 @@ struct Song: Identifiable, Sendable, Hashable {
         self.duration = duration
         self.rank = rank
         self.musicKitID = musicKitID
+        self.englishTitle = englishTitle
+        self.englishArtistName = englishArtistName
     }
 }
 

@@ -203,6 +203,16 @@ final class PlayerViewModel {
     private func fetchLyrics(song: Song) async {
         AppLogger.info("가사 조회 시작: \(song.title) (id=\(song.id))", category: .lyrics)
 
+        // 영어 메타데이터가 없으면 먼저 가져옴 (lrclib용)
+        var mutableSong = song
+        if mutableSong.englishTitle == nil {
+            if let english = await musicPlayerService.fetchEnglishMetadata(for: song) {
+                mutableSong.englishTitle = english.title
+                mutableSong.englishArtistName = english.artist
+                AppLogger.debug("영어 이름: \(english.title) - \(english.artist)", category: .lyrics)
+            }
+        }
+
         // 1차: Supabase에서 원본 + 번역 조회
         let supabaseResult = await translatedLyricService.fetchLyrics(appleMusicID: song.id)
 
@@ -230,12 +240,12 @@ final class PlayerViewModel {
             }
         }
 
-        // 2차: lrclib.net fallback
-        AppLogger.info("Supabase 실패/없음 → lrclib fallback", category: .lyrics)
+        // 2차: lrclib.net fallback (영어 이름 사용)
+        AppLogger.info("Supabase 실패/없음 → lrclib fallback (artist=\(mutableSong.lrcArtistName), track=\(mutableSong.lrcTitle))", category: .lyrics)
         let state = await lyricService.fetchLyrics(
-            artist: song.artistName,
-            track: song.title,
-            duration: song.duration
+            artist: mutableSong.lrcArtistName,
+            track: mutableSong.lrcTitle,
+            duration: mutableSong.duration
         )
         lyricState = state
         translatedLines = nil

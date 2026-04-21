@@ -22,6 +22,7 @@ protocol MusicPlayerServiceProtocol: Sendable {
     func pause() async
     func resume() async throws
     func seek(to time: TimeInterval) async
+    func fetchEnglishMetadata(for song: Song) async -> (title: String, artist: String)?
     var playbackTime: TimeInterval { get async }
     var playbackStatus: MusicPlayer.PlaybackStatus { get async }
 }
@@ -74,6 +75,30 @@ actor MusicPlayerService: MusicPlayerServiceProtocol {
     /// 지정한 시간으로 재생 위치를 이동한다.
     func seek(to time: TimeInterval) {
         player.playbackTime = time
+    }
+
+    /// Apple Music API에서 영어 메타데이터를 가져온다 (lrclib 가사 조회용).
+    func fetchEnglishMetadata(for song: Song) async -> (title: String, artist: String)? {
+        guard let url = URL(string: "https://api.music.apple.com/v1/catalog/us/songs/\(song.musicKitID.rawValue)") else {
+            return nil
+        }
+
+        do {
+            let request = MusicDataRequest(urlRequest: URLRequest(url: url))
+            let response = try await request.response()
+            let json = try JSONSerialization.jsonObject(with: response.data) as? [String: Any]
+            guard let dataArray = json?["data"] as? [[String: Any]],
+                  let attributes = dataArray.first?["attributes"] as? [String: Any],
+                  let title = attributes["name"] as? String,
+                  let artist = attributes["artistName"] as? String else {
+                return nil
+            }
+            AppLogger.debug("영어 메타데이터: \(title) - \(artist)", category: .lyrics)
+            return (title, artist)
+        } catch {
+            AppLogger.warn("영어 메타데이터 조회 실패: \(error.localizedDescription)", category: .lyrics)
+            return nil
+        }
     }
 
     /// 현재 재생 시간을 반환한다.
