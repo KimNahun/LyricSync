@@ -5,6 +5,7 @@ import SwiftUI
 struct FullPlayerView: View {
     @Environment(PlayerViewModel.self) private var playerViewModel
     @Environment(\.dismiss) private var dismiss
+    @State private var dragOffset: CGFloat = 0
 
     var body: some View {
         @Bindable var vm = playerViewModel
@@ -47,6 +48,24 @@ struct FullPlayerView: View {
                     .accessibilityLabel("플레이어 닫기")
                 }
             }
+            .offset(y: max(0, dragOffset))
+            .gesture(
+                DragGesture()
+                    .onChanged { value in
+                        if value.translation.height > 0 {
+                            dragOffset = value.translation.height
+                        }
+                    }
+                    .onEnded { value in
+                        if value.translation.height > 120 {
+                            dismiss()
+                        } else {
+                            withAnimation(.spring(response: 0.3)) {
+                                dragOffset = 0
+                            }
+                        }
+                    }
+            )
         }
     }
 

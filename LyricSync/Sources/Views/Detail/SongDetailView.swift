@@ -6,7 +6,6 @@ struct SongDetailView: View {
     let song: Song
     @Environment(PlayerViewModel.self) private var playerViewModel
     @Environment(\.dismiss) private var dismiss
-    @State private var dragOffset: CGFloat = 0
 
     private var isCurrentSong: Bool {
         playerViewModel.currentSong?.id == song.id
@@ -18,9 +17,6 @@ struct SongDetailView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            // 드래그 핸들
-            dragHandle
-
             // 상단: 컴팩트 곡 정보 + 재생 버튼
             compactHeader
 
@@ -35,34 +31,6 @@ struct SongDetailView: View {
         }
         .navigationTitle(song.title)
         .navigationBarTitleDisplayMode(.inline)
-        .offset(y: max(0, dragOffset))
-        .gesture(
-            DragGesture()
-                .onChanged { value in
-                    if value.translation.height > 0 {
-                        dragOffset = value.translation.height
-                    }
-                }
-                .onEnded { value in
-                    if value.translation.height > 120 {
-                        dismiss()
-                    } else {
-                        withAnimation(.spring(response: 0.3)) {
-                            dragOffset = 0
-                        }
-                    }
-                }
-        )
-    }
-
-    // MARK: - 드래그 핸들
-
-    private var dragHandle: some View {
-        RoundedRectangle(cornerRadius: 2.5)
-            .fill(Color(.tertiarySystemFill))
-            .frame(width: 36, height: 5)
-            .padding(.top, 8)
-            .padding(.bottom, 4)
     }
 
     // MARK: - 컴팩트 헤더 (1줄)

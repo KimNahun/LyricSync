@@ -104,6 +104,10 @@ struct ChartListView: View {
                     Divider()
                         .padding(.leading, 84)
                 }
+
+                // 미니 플레이어에 가려지지 않도록 하단 여백
+                Spacer()
+                    .frame(height: 80)
             }
         }
         .scrollDismissesKeyboard(.interactively)
@@ -146,6 +150,9 @@ struct ChartListView: View {
                             .padding(.leading, 84)
                     }
                 }
+
+                Spacer()
+                    .frame(height: 80)
             }
         }
         .scrollDismissesKeyboard(.interactively)
