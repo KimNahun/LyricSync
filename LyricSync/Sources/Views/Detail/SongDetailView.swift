@@ -6,9 +6,10 @@ struct SongDetailView: View {
     @Environment(PlayerViewModel.self) private var playerViewModel
     @Environment(\.dbUserId) private var dbUserId
 
-    @State private var userTranslations: [Int: String] = [:]  // index → 유저 번역
+    @State private var userTranslations: [Int: String] = [:]
     @State private var editingLineIndex: Int?
     @State private var showTranslationInput = false
+    @State private var isStudyMode = false
 
     private let userTranslationService = UserTranslationService()
 
@@ -26,8 +27,9 @@ struct SongDetailView: View {
         VStack(spacing: 0) {
             playerHeader
 
-            if isCurrentSong && playerViewModel.hasTranslation {
-                translationModeToggle
+            // 모드 바: AI 번역 토글 + 공부 모드 토글
+            if isCurrentSong {
+                modeBar
             }
 
             Divider()
@@ -70,6 +72,52 @@ struct SongDetailView: View {
                 }
             }
         }
+    }
+
+    // MARK: - 모드 바
+
+    private var modeBar: some View {
+        HStack(spacing: 8) {
+            // AI 번역 모드 (번역 있을 때만)
+            if playerViewModel.hasTranslation {
+                @Bindable var vm = playerViewModel
+
+                Picker("", selection: $vm.translationMode) {
+                    Text("동시").tag(TranslationMode.simultaneous)
+                    Text("가림").tag(TranslationMode.hidden)
+                }
+                .pickerStyle(.segmented)
+                .frame(maxWidth: .infinity)
+            } else {
+                Spacer()
+            }
+
+            // 공부 모드 토글
+            if dbUserId != nil {
+                Button {
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        isStudyMode.toggle()
+                    }
+                } label: {
+                    HStack(spacing: 4) {
+                        Image(systemName: isStudyMode ? "pencil.circle.fill" : "pencil.circle")
+                            .font(.body)
+                        Text("공부")
+                            .font(.caption.weight(.medium))
+                    }
+                    .foregroundStyle(isStudyMode ? Color.green : Color.secondary)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .background(
+                        isStudyMode ? Color.green.opacity(0.12) : Color(.tertiarySystemFill),
+                        in: Capsule()
+                    )
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 6)
     }
 
     // MARK: - 유저 번역 로드/저장
@@ -182,20 +230,6 @@ struct SongDetailView: View {
         }
     }
 
-    // MARK: - 번역 모드 토글
-
-    private var translationModeToggle: some View {
-        @Bindable var vm = playerViewModel
-
-        return Picker("번역 모드", selection: $vm.translationMode) {
-            Text("동시 표시").tag(TranslationMode.simultaneous)
-            Text("가림 모드").tag(TranslationMode.hidden)
-        }
-        .pickerStyle(.segmented)
-        .padding(.horizontal, 16)
-        .padding(.vertical, 6)
-    }
-
     // MARK: - 가사 영역
 
     @ViewBuilder
@@ -244,14 +278,9 @@ struct SongDetailView: View {
                                 Task { await playerViewModel.seek(to: line.timestamp) }
                             }
                         )
-                        .onLongPressGesture {
-                            editingLineIndex = index
-                            showTranslationInput = true
-                        }
 
-                        // 번역 표시: 유저 번역 > AI 번역 > 번역 추가 버튼
+                        // 유저 번역 (있으면 항상 표시)
                         if let userTrans = userTranslations[index] {
-                            // 유저 번역
                             HStack(spacing: 4) {
                                 Text(userTrans)
                                     .font(.footnote)
@@ -268,28 +297,39 @@ struct SongDetailView: View {
                                 editingLineIndex = index
                                 showTranslationInput = true
                             }
-                        } else if let tLines = translatedLines, index < tLines.count {
-                            // AI 번역
+                        }
+                        // 공부 모드일 때 — 유저 번역 없는 줄에 입력 버튼
+                        else if isStudyMode {
+                            Button {
+                                editingLineIndex = index
+                                showTranslationInput = true
+                            } label: {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "plus.circle")
+                                        .font(.caption2)
+                                    Text("내 번역 쓰기")
+                                        .font(.caption2)
+                                }
+                                .foregroundStyle(Color.green.opacity(0.5))
+                                .padding(.horizontal, 10)
+                                .padding(.vertical, 4)
+                                .background(
+                                    Capsule()
+                                        .strokeBorder(Color.green.opacity(0.2), lineWidth: 1)
+                                )
+                            }
+                            .buttonStyle(.plain)
+                            .padding(.bottom, 2)
+                        }
+
+                        // AI 번역 (유저 번역과 별도로 표시)
+                        if let tLines = translatedLines, index < tLines.count,
+                           userTranslations[index] == nil {
                             translatedLineView(
                                 text: tLines[index].text,
                                 index: index,
                                 isActive: playerViewModel.currentLyricIndex == index
                             )
-                        } else if dbUserId != nil {
-                            // 번역 추가 버튼
-                            Button {
-                                editingLineIndex = index
-                                showTranslationInput = true
-                            } label: {
-                                Text("번역 추가")
-                                    .font(.caption2)
-                                    .foregroundStyle(.secondary.opacity(0.3))
-                                    .padding(.horizontal, 10)
-                                    .padding(.vertical, 3)
-                                    .background(Capsule().fill(Color(.systemGray6)))
-                            }
-                            .buttonStyle(.plain)
-                            .padding(.bottom, 2)
                         }
                     }
                     .id(index)
@@ -348,8 +388,6 @@ struct SongDetailView: View {
             .padding(.bottom, 2)
         }
     }
-
-    // MARK: - 재생 전 안내
 
     private var notPlayingView: some View {
         VStack(spacing: 16) {
