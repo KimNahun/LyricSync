@@ -35,23 +35,41 @@ struct LyricSyncApp: App {
     }
 
     private var mainContent: some View {
-        NavigationStack {
-            ChartListView()
-                .toolbar {
-                    ToolbarItem(placement: .topBarTrailing) {
-                        NavigationLink {
-                            SettingsView(isAuthenticated: $isAuthenticated)
-                        } label: {
-                            Image(systemName: "gearshape")
-                                .foregroundStyle(.secondary)
+        ZStack {
+            TabView {
+                // 차트 탭
+                NavigationStack {
+                    ChartListView()
+                        .toolbar {
+                            ToolbarItem(placement: .topBarTrailing) {
+                                NavigationLink {
+                                    SettingsView(isAuthenticated: $isAuthenticated)
+                                } label: {
+                                    Image(systemName: "gearshape")
+                                        .foregroundStyle(.secondary)
+                                }
+                            }
                         }
-                    }
                 }
-        }
-        .safeAreaInset(edge: .bottom) {
+                .tabItem {
+                    Label("차트", systemImage: "chart.line.uptrend.xyaxis")
+                }
+
+                // 내 번역 탭
+                NavigationStack {
+                    MyTranslationsListView()
+                        .navigationTitle("내 번역")
+                        .navigationBarTitleDisplayMode(.large)
+                }
+                .tabItem {
+                    Label("내 번역", systemImage: "text.book.closed")
+                }
+            }
+
+            // 플로팅 플레이어 버튼 (재생 중일 때만)
             if playerViewModel.currentSong != nil {
-                MiniPlayerView()
-                    .transition(.move(edge: .bottom).combined(with: .opacity))
+                FloatingPlayerButton()
+                    .transition(.scale.combined(with: .opacity))
             }
         }
         .environment(playerViewModel)

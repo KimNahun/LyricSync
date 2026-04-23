@@ -337,7 +337,7 @@ struct SongDetailView: View {
             }
             .padding(.vertical, 16)
             .padding(.horizontal, 20)
-            .padding(.bottom, 80)
+            .padding(.bottom, 16)
         }
         .simultaneousGesture(
             DragGesture(minimumDistance: 5)

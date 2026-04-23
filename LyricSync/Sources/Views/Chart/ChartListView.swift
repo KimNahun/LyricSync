@@ -4,6 +4,7 @@ import SwiftUI
 struct ChartListView: View {
     @State private var viewModel = ChartViewModel()
     @Environment(PlayerViewModel.self) private var playerViewModel
+    @Environment(\.dbUserId) private var dbUserId
     @FocusState private var isSearchFocused: Bool
 
     var body: some View {
@@ -24,6 +25,9 @@ struct ChartListView: View {
         .navigationBarTitleDisplayMode(.large)
         .task {
             await viewModel.checkAuthorizationAndFetch()
+            if let userId = dbUserId {
+                await viewModel.fetchStudiedStatus(userId: userId)
+            }
         }
     }
 
@@ -94,7 +98,8 @@ struct ChartListView: View {
                     NavigationLink(value: song) {
                         SongRowView(
                             song: song,
-                            hasTranslation: viewModel.hasTranslation(for: song)
+                            hasTranslation: viewModel.hasTranslation(for: song),
+                            hasStudied: viewModel.hasStudied(for: song)
                         )
                         .padding(.horizontal, 16)
                         .padding(.vertical, 8)
@@ -104,10 +109,6 @@ struct ChartListView: View {
                     Divider()
                         .padding(.leading, 84)
                 }
-
-                // 미니 플레이어에 가려지지 않도록 하단 여백
-                Spacer()
-                    .frame(height: 80)
             }
         }
         .scrollDismissesKeyboard(.interactively)
@@ -139,7 +140,8 @@ struct ChartListView: View {
                         NavigationLink(value: song) {
                             SongRowView(
                                 song: song,
-                                hasTranslation: viewModel.hasTranslation(for: song)
+                                hasTranslation: viewModel.hasTranslation(for: song),
+                                hasStudied: viewModel.hasStudied(for: song)
                             )
                             .padding(.horizontal, 16)
                             .padding(.vertical, 8)
@@ -150,9 +152,6 @@ struct ChartListView: View {
                             .padding(.leading, 84)
                     }
                 }
-
-                Spacer()
-                    .frame(height: 80)
             }
         }
         .scrollDismissesKeyboard(.interactively)
