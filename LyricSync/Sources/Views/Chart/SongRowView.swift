@@ -4,6 +4,7 @@ import SwiftUI
 struct SongRowView: View {
     let song: Song
     var hasTranslation: Bool = false
+    var hasStudied: Bool = false
 
     var body: some View {
         HStack(spacing: 12) {
@@ -32,17 +33,25 @@ struct SongRowView: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
 
-            // 번역 배지
-            if hasTranslation {
-                Text("번역")
-                    .font(.caption2.weight(.semibold))
-                    .foregroundStyle(Color.accentColor)
-                    .padding(.horizontal, 7)
-                    .padding(.vertical, 3)
-                    .background(
-                        Color.accentColor.opacity(0.12),
-                        in: Capsule()
-                    )
+            // 배지 영역
+            HStack(spacing: 4) {
+                if hasStudied {
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.caption2)
+                        .foregroundStyle(Color.green)
+                }
+
+                if hasTranslation {
+                    Text("번역")
+                        .font(.caption2.weight(.semibold))
+                        .foregroundStyle(Color.accentColor)
+                        .padding(.horizontal, 7)
+                        .padding(.vertical, 3)
+                        .background(
+                            Color.accentColor.opacity(0.12),
+                            in: Capsule()
+                        )
+                }
             }
 
             // 셰브론
@@ -52,6 +61,6 @@ struct SongRowView: View {
         }
         .contentShape(Rectangle())
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(song.rank.map { "\($0)위, " } ?? "")\(song.title), \(song.artistName)\(hasTranslation ? ", 번역 있음" : "")")
+        .accessibilityLabel("\(song.rank.map { "\($0)위, " } ?? "")\(song.title), \(song.artistName)\(hasTranslation ? ", 번역 있음" : "")\(hasStudied ? ", 공부 완료" : "")")
     }
 }

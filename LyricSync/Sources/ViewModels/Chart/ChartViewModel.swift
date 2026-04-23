@@ -25,9 +25,15 @@ final class ChartViewModel {
     /// 번역이 있는 곡의 apple_music_id 집합.
     private(set) var translatedSongIDs: Set<String> = []
 
+    // MARK: - 공부 배지
+
+    /// 유저가 번역(공부)한 곡의 apple_music_id 집합.
+    private(set) var studiedSongIDs: Set<String> = []
+
     private let chartService: any ChartServiceProtocol
     private let searchService: any SearchServiceProtocol
     private let translatedLyricService: any TranslatedLyricServiceProtocol
+    private let userTranslationService: any UserTranslationServiceProtocol
     private var searchTask: Task<Void, Never>?
     /// 이미 배치 조회한 ID. 세션 내 캐시.
     private var checkedIDs: Set<String> = []
@@ -35,11 +41,13 @@ final class ChartViewModel {
     init(
         chartService: any ChartServiceProtocol = ChartService(),
         searchService: any SearchServiceProtocol = SearchService(),
-        translatedLyricService: any TranslatedLyricServiceProtocol = TranslatedLyricService()
+        translatedLyricService: any TranslatedLyricServiceProtocol = TranslatedLyricService(),
+        userTranslationService: any UserTranslationServiceProtocol = UserTranslationService()
     ) {
         self.chartService = chartService
         self.searchService = searchService
         self.translatedLyricService = translatedLyricService
+        self.userTranslationService = userTranslationService
     }
 
     /// MusicKit 권한 상태를 확인하고, 승인 시 차트를 자동으로 fetch한다.
@@ -114,5 +122,15 @@ final class ChartViewModel {
     /// 특정 곡에 번역이 있는지 확인한다.
     func hasTranslation(for song: Song) -> Bool {
         translatedSongIDs.contains(song.id)
+    }
+
+    /// 특정 곡을 유저가 공부(번역)했는지 확인한다.
+    func hasStudied(for song: Song) -> Bool {
+        studiedSongIDs.contains(song.id)
+    }
+
+    /// 유저의 공부 상태를 조회한다.
+    func fetchStudiedStatus(userId: Int) async {
+        studiedSongIDs = await userTranslationService.fetchStudiedSongIDs(userId: userId)
     }
 }
