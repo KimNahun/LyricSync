@@ -56,6 +56,11 @@ final class PlayerViewModel {
     private var timer: Timer?
     private var userScrollTimer: Timer?
 
+    /// 현재 진행 중인 play Task. 중복 호출 시 이전 Task를 취소한다.
+    private var playTask: Task<Void, Never>?
+    /// 현재 진행 중인 가사 fetch Task.
+    private var lyricTask: Task<Void, Never>?
+
     init(
         musicPlayerService: any MusicPlayerServiceProtocol = MusicPlayerService(),
         lyricService: any LyricServiceProtocol = LyricService(),
@@ -92,6 +97,11 @@ final class PlayerViewModel {
 
     /// 지정한 곡을 재생한다. 가사 fetch는 비동기로 재생을 블록하지 않는다.
     func play(song: Song) async {
+        // 이전 play/lyric Task 취소하여 경합 방지
+        playTask?.cancel()
+        lyricTask?.cancel()
+        stopTimer()
+
         errorMessage = nil
         currentSong = song
         duration = song.duration ?? 0
@@ -102,15 +112,19 @@ final class PlayerViewModel {
 
         do {
             try await musicPlayerService.play(song: song)
+            // play 완료 후 아직 이 곡이 현재 곡인지 확인 (경합 방지)
+            guard currentSong?.id == song.id else { return }
             isPlaying = true
             sliderValue = 0
             startTimer()
         } catch {
+            guard currentSong?.id == song.id else { return }
             errorMessage = error.localizedDescription
             isPlaying = false
         }
 
-        Task {
+        // 가사 fetch를 별도 Task로 실행 (취소 가능하게)
+        lyricTask = Task {
             await fetchLyrics(song: song)
         }
     }
@@ -130,6 +144,7 @@ final class PlayerViewModel {
             startTimer()
         } catch {
             errorMessage = error.localizedDescription
+            isPlaying = false
         }
     }
 
@@ -189,12 +204,18 @@ final class PlayerViewModel {
     }
 
     private func pollPlaybackTime() async {
-        guard !isDragging else { return }
+        // isDragging 스냅샷을 먼저 캡처
+        let dragging = isDragging
+        guard !dragging else { return }
+
         let time = await musicPlayerService.playbackTime
+        let status = await musicPlayerService.playbackStatus
+
+        // 폴링 결과 적용 전 isDragging 재확인 (TOCTOU 방지)
+        guard !isDragging else { return }
+
         currentTime = time
         sliderValue = time
-
-        let status = await musicPlayerService.playbackStatus
         isPlaying = status == .playing
     }
 
@@ -213,8 +234,13 @@ final class PlayerViewModel {
             }
         }
 
+        // Task 취소 확인
+        guard !Task.isCancelled, currentSong?.id == song.id else { return }
+
         // 1차: Supabase에서 원본 + 번역 조회
         let supabaseResult = await translatedLyricService.fetchLyrics(appleMusicID: song.id)
+
+        guard !Task.isCancelled, currentSong?.id == song.id else { return }
 
         AppLogger.debug("Supabase 결과: original=\(supabaseResult.originalLRC != nil), translated=\(supabaseResult.translatedLRC != nil)", category: .lyrics)
 
@@ -241,12 +267,16 @@ final class PlayerViewModel {
         }
 
         // 2차: lrclib.net fallback (영어 이름 사용)
+        guard !Task.isCancelled, currentSong?.id == song.id else { return }
+
         AppLogger.info("Supabase 실패/없음 → lrclib fallback (artist=\(mutableSong.lrcArtistName), track=\(mutableSong.lrcTitle))", category: .lyrics)
         let state = await lyricService.fetchLyrics(
             artist: mutableSong.lrcArtistName,
             track: mutableSong.lrcTitle,
             duration: mutableSong.duration
         )
+
+        guard !Task.isCancelled, currentSong?.id == song.id else { return }
         lyricState = state
         translatedLines = nil
         AppLogger.info("lrclib 결과: \(state)", category: .lyrics)

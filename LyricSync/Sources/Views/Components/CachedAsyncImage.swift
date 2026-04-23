@@ -56,14 +56,32 @@ struct CachedAsyncImage: View {
         isLoading = true
         defer { isLoading = false }
 
-        do {
-            let (data, _) = try await URLSession.shared.data(from: url)
-            if let uiImage = UIImage(data: data) {
-                ImageCache.shared.set(uiImage, for: url)
-                self.image = uiImage
+        // 최대 2회 재시도 (총 3회 시도)
+        for attempt in 0..<3 {
+            // URL 변경으로 Task가 취소되었으면 중단
+            guard !Task.isCancelled else { return }
+
+            do {
+                let (data, _) = try await URLSession.shared.data(from: url)
+
+                guard !Task.isCancelled else { return }
+
+                if let uiImage = UIImage(data: data) {
+                    ImageCache.shared.set(uiImage, for: url)
+                    self.image = uiImage
+                    return
+                } else {
+                    AppLogger.warn("이미지 디코딩 실패: \(url.lastPathComponent)", category: .network)
+                }
+            } catch {
+                if Task.isCancelled { return }
+                AppLogger.warn("이미지 로드 실패 (시도 \(attempt + 1)/3): \(error.localizedDescription)", category: .network)
             }
-        } catch {
-            // 실패 시 placeholder 유지
+
+            // 마지막 시도가 아니면 1초 대기 후 재시도
+            if attempt < 2 {
+                try? await Task.sleep(for: .seconds(1))
+            }
         }
     }
 }
