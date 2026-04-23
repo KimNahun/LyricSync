@@ -25,6 +25,7 @@ protocol MusicPlayerServiceProtocol: Sendable {
     func fetchEnglishMetadata(for song: Song) async -> (title: String, artist: String)?
     var playbackTime: TimeInterval { get async }
     var playbackStatus: MusicPlayer.PlaybackStatus { get async }
+    var lastPlayedDuration: TimeInterval? { get async }
 }
 
 /// ApplicationMusicPlayer.shared를 래핑하는 재생 Service.
@@ -36,6 +37,7 @@ actor MusicPlayerService: MusicPlayerServiceProtocol {
     nonisolated(unsafe) private let player = ApplicationMusicPlayer.shared
 
     /// 지정한 Song을 재생한다. MusicKit Song을 재조회하여 큐에 설정한다.
+    /// 재생 성공 시 MusicKit에서 가져온 실제 duration을 반환한다.
     func play(song: Song) async throws {
         do {
             var request = MusicCatalogResourceRequest<MusicKit.Song>(
@@ -49,6 +51,9 @@ actor MusicPlayerService: MusicPlayerServiceProtocol {
                 throw MusicPlayerError.songNotFound
             }
 
+            // 실제 duration 캐시 (내 번역 탭에서 진입 시 song.duration이 nil일 수 있음)
+            lastPlayedDuration = musicKitSong.duration
+
             player.queue = [musicKitSong]
             try await player.play()
         } catch let error as MusicPlayerError {
@@ -57,6 +62,9 @@ actor MusicPlayerService: MusicPlayerServiceProtocol {
             throw MusicPlayerError.playbackFailed(error)
         }
     }
+
+    /// 마지막 재생 곡의 실제 duration (MusicKit에서 가져온 값).
+    var lastPlayedDuration: TimeInterval? = nil
 
     /// 현재 재생을 일시정지한다.
     func pause() {

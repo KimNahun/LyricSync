@@ -256,10 +256,10 @@ struct FullPlayerView: View {
         case .simultaneous:
             Text(text)
                 .font(.footnote)
-                .foregroundStyle(isActive ? Color.appAccent.opacity(0.8) : Color.secondary.opacity(0.5))
+                .foregroundStyle(isActive ? Color.appAccent : Color.primary.opacity(0.4))
                 .multilineTextAlignment(.center)
                 .frame(maxWidth: .infinity)
-                
+
         case .hidden:
             Button {
                 withAnimation(.easeInOut(duration: 0.2)) {
@@ -270,7 +270,7 @@ struct FullPlayerView: View {
                     if isRevealed {
                         Text(text)
                             .font(.footnote)
-                            .foregroundStyle(isActive ? Color.appAccent.opacity(0.8) : Color.secondary.opacity(0.6))
+                            .foregroundStyle(isActive ? Color.appAccent : Color.primary.opacity(0.45))
                             .multilineTextAlignment(.center)
                             .frame(maxWidth: .infinity)
                             .transition(.opacity.combined(with: .scale(scale: 0.95)))

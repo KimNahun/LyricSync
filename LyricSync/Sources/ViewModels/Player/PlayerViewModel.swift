@@ -116,6 +116,10 @@ final class PlayerViewModel {
             guard currentSong?.id == song.id else { return }
             isPlaying = true
             sliderValue = 0
+            // duration이 0이면 MusicKit에서 가져온 실제 duration으로 갱신
+            if duration == 0, let realDuration = await musicPlayerService.lastPlayedDuration {
+                duration = realDuration
+            }
             startTimer()
         } catch {
             guard currentSong?.id == song.id else { return }

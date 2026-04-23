@@ -16,7 +16,7 @@ struct LyricLineView: View {
     var body: some View {
         Text(line.text.isEmpty ? " " : line.text)
             .font(isActive ? .body.weight(.semibold) : .body)
-            .foregroundStyle(isActive ? Color.primary : Color.secondary)
+            .foregroundStyle(isActive ? Color.primary : Color.primary.opacity(0.55))
             .multilineTextAlignment(.center)
             .animation(.easeInOut(duration: 0.2), value: isActive)
             .frame(maxWidth: .infinity, alignment: .center)

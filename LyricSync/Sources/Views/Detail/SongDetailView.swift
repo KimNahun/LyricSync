@@ -280,21 +280,15 @@ struct SongDetailView: View {
                         )
 
                         if isStudyMode {
-                            // 공부 모드: 내 번역만 표시, AI 번역 완전 숨김
+                            // 공부 모드: 원문 + 내 번역만. AI 번역 완전 숨김.
                             if let userTrans = userTranslations[index] {
                                 userTranslationCard(text: userTrans, index: index)
                             } else if dbUserId != nil {
                                 addTranslationButton(index: index)
                             }
                         } else {
-                            // 일반 모드: 내 번역 있으면 표시 + AI 번역 표시
-                            if let userTrans = userTranslations[index] {
-                                userTranslationCard(text: userTrans, index: index)
-                            }
-
-                            // AI 번역 (내 번역이 없는 줄에만)
-                            if let tLines = translatedLines, index < tLines.count,
-                               userTranslations[index] == nil {
+                            // 동시/가림 모드: AI 번역만 표시. 내 번역 숨김.
+                            if let tLines = translatedLines, index < tLines.count {
                                 translatedLineView(
                                     text: tLines[index].text,
                                     index: index,
@@ -324,17 +318,17 @@ struct SongDetailView: View {
             editingLineIndex = index
             showTranslationInput = true
         } label: {
-            HStack(spacing: 8) {
+            VStack(spacing: 2) {
                 Text(text)
                     .font(.footnote)
                     .foregroundStyle(Color.appStudy)
                     .multilineTextAlignment(.center)
-                    .frame(maxWidth: .infinity)
 
-                Text("수정")
+                Text("탭하여 수정")
                     .font(.caption2)
-                    .foregroundStyle(Color.appStudy.opacity(0.6))
+                    .foregroundStyle(Color.appStudy.opacity(0.4))
             }
+            .frame(maxWidth: .infinity)
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
             .background(Color.appStudy.opacity(0.08), in: RoundedRectangle(cornerRadius: 8))
@@ -373,10 +367,9 @@ struct SongDetailView: View {
         case .simultaneous:
             Text(text)
                 .font(.footnote)
-                .foregroundStyle(isActive ? Color.appAccent.opacity(0.8) : Color.secondary.opacity(0.5))
+                .foregroundStyle(isActive ? Color.appAccent : Color.primary.opacity(0.4))
                 .multilineTextAlignment(.center)
                 .frame(maxWidth: .infinity)
-                .padding(.bottom, 2)
 
         case .hidden:
             Button {
@@ -387,7 +380,7 @@ struct SongDetailView: View {
                 if isRevealed {
                     Text(text)
                         .font(.footnote)
-                        .foregroundStyle(isActive ? Color.appAccent.opacity(0.8) : Color.secondary.opacity(0.6))
+                        .foregroundStyle(isActive ? Color.appAccent : Color.primary.opacity(0.45))
                         .multilineTextAlignment(.center)
                         .frame(maxWidth: .infinity)
                         .transition(.opacity.combined(with: .scale(scale: 0.95)))

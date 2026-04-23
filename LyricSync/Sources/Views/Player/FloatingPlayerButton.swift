@@ -27,8 +27,9 @@ struct FloatingPlayerButton: View {
                     x: baseX + dragOffset.width + buttonSize / 2,
                     y: baseY + dragOffset.height + buttonSize / 2
                 )
-                .animation(isDragging ? nil : .spring(response: 0.3, dampingFraction: 0.7), value: posX)
-                .animation(isDragging ? nil : .spring(response: 0.3, dampingFraction: 0.7), value: posY)
+                .animation(.interactiveSpring(response: 0.15, dampingFraction: 0.8), value: dragOffset)
+                .animation(.spring(response: 0.35, dampingFraction: 0.75), value: posX)
+                .animation(.spring(response: 0.35, dampingFraction: 0.75), value: posY)
                 .gesture(
                     DragGesture(coordinateSpace: .global)
                         .onChanged { value in

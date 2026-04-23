@@ -80,6 +80,8 @@ actor MockMusicPlayerService: MusicPlayerServiceProtocol {
     var playbackStatus: MusicPlayer.PlaybackStatus {
         _playbackStatus
     }
+
+    var lastPlayedDuration: TimeInterval? = nil
 }
 
 // MARK: - MockChartService
