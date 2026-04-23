@@ -92,7 +92,7 @@ actor UserTranslationService: UserTranslationServiceProtocol {
 
     /// 유저의 모든 번역을 곡별로 그룹화하여 조회한다. 각 곡의 최신 버전 기준.
     func fetchAll(userId: Int) async -> [MyTranslationSummary] {
-        let urlString = "\(baseURL)/user_translations?user_id=eq.\(userId)&select=apple_music_id,title,artist,lines,version,updated_at&order=updated_at.desc"
+        let urlString = "\(baseURL)/user_translations?user_id=eq.\(userId)&select=apple_music_id,title,artist,lines,version,updated_at,created_at&order=updated_at.desc"
         guard let url = URL(string: urlString) else { return [] }
 
         var request = URLRequest(url: url)
@@ -105,8 +105,8 @@ actor UserTranslationService: UserTranslationServiceProtocol {
                   httpResponse.statusCode == 200 else { return [] }
 
             let rows = try JSONDecoder().decode([AllRow].self, from: data)
-            let formatter = ISO8601DateFormatter()
-            formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+
+            AppLogger.debug("fetchAll: \(rows.count)행 조회", category: .supabase)
 
             // 곡별 그룹화 — 가장 최근 updated_at 버전만 표시
             var seen = Set<String>()
@@ -120,7 +120,7 @@ actor UserTranslationService: UserTranslationServiceProtocol {
                     title: row.title,
                     artist: row.artist,
                     lineCount: row.lines.count,
-                    createdAt: formatter.date(from: row.updated_at ?? ""),
+                    createdAt: Self.parseDate(row.updated_at ?? row.created_at),
                     versionCount: rows.filter { $0.apple_music_id == row.apple_music_id }.count
                 ))
             }
@@ -147,14 +147,12 @@ actor UserTranslationService: UserTranslationServiceProtocol {
                   httpResponse.statusCode == 200 else { return [] }
 
             let rows = try JSONDecoder().decode([VersionRow].self, from: data)
-            let formatter = ISO8601DateFormatter()
-            formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
 
             return rows.map { row in
                 TranslationVersion(
                     version: row.version,
                     lineCount: row.lines.count,
-                    updatedAt: formatter.date(from: row.updated_at ?? "")
+                    updatedAt: Self.parseDate(row.updated_at)
                 )
             }
         } catch {
@@ -191,6 +189,21 @@ actor UserTranslationService: UserTranslationServiceProtocol {
         return (versions.map(\.version).max() ?? 0) + 1
     }
 
+    // MARK: - 날짜 파싱
+
+    /// Supabase timestamptz 형식을 파싱한다. fractional seconds 유무 모두 지원.
+    private static func parseDate(_ string: String?) -> Date? {
+        guard let string, !string.isEmpty else { return nil }
+
+        let withFrac = ISO8601DateFormatter()
+        withFrac.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        if let date = withFrac.date(from: string) { return date }
+
+        let withoutFrac = ISO8601DateFormatter()
+        withoutFrac.formatOptions = [.withInternetDateTime]
+        return withoutFrac.date(from: string)
+    }
+
     // MARK: - 응답 모델
 
     private struct LinesRow: Decodable {
@@ -204,6 +217,7 @@ actor UserTranslationService: UserTranslationServiceProtocol {
         let lines: [UserTranslationLine]
         let version: Int
         let updated_at: String?
+        let created_at: String?
     }
 
     private struct VersionRow: Decodable {

@@ -1,14 +1,14 @@
 import SwiftUI
 
 /// 드래그 가능한 원형 플로팅 플레이어 버튼.
-/// 현재 재생 곡의 앨범 아트를 원형으로 표시하고, 원형 프로그레스 링을 표시한다.
-/// 탭하면 FullPlayerView를 열고, 드래그로 화면 내 위치를 이동할 수 있다.
 struct FloatingPlayerButton: View {
     @Environment(PlayerViewModel.self) private var playerViewModel
 
     @AppStorage("floatingPlayerX") private var posX: Double = -1
     @AppStorage("floatingPlayerY") private var posY: Double = -1
-    @State private var dragOffset: CGSize = .zero
+    /// 드래그 중 현재 위치를 직접 추적. posX/posY와 별개.
+    @State private var currentX: Double = -1
+    @State private var currentY: Double = -1
     @State private var isDragging = false
 
     private let buttonSize: CGFloat = 56
@@ -19,37 +19,47 @@ struct FloatingPlayerButton: View {
         GeometryReader { geo in
             let defaultX = geo.size.width - buttonSize - 16
             let defaultY = geo.size.height - buttonSize - 100
-            let baseX = posX < 0 ? defaultX : posX
-            let baseY = posY < 0 ? defaultY : posY
 
             playerButton
                 .position(
-                    x: baseX + dragOffset.width + buttonSize / 2,
-                    y: baseY + dragOffset.height + buttonSize / 2
+                    x: (currentX < 0 ? defaultX : currentX) + buttonSize / 2,
+                    y: (currentY < 0 ? defaultY : currentY) + buttonSize / 2
                 )
-                .animation(.interactiveSpring(response: 0.15, dampingFraction: 0.8), value: dragOffset)
-                .animation(.spring(response: 0.35, dampingFraction: 0.75), value: posX)
-                .animation(.spring(response: 0.35, dampingFraction: 0.75), value: posY)
                 .gesture(
                     DragGesture(coordinateSpace: .global)
                         .onChanged { value in
-                            isDragging = true
-                            dragOffset = value.translation
+                            if !isDragging {
+                                isDragging = true
+                                // 드래그 시작 시 현재 위치를 기준점으로 설정
+                                if currentX < 0 { currentX = defaultX }
+                                if currentY < 0 { currentY = defaultY }
+                            }
+                            // 애니메이션 없이 즉시 위치 업데이트 → 손가락 따라 바로 이동
+                            currentX = (posX < 0 ? defaultX : posX) + value.translation.width
+                            currentY = (posY < 0 ? defaultY : posY) + value.translation.height
                         }
                         .onEnded { value in
-                            let newX = baseX + value.translation.width
-                            let newY = baseY + value.translation.height
+                            let finalX = (posX < 0 ? defaultX : posX) + value.translation.width
+                            let finalY = (posY < 0 ? defaultY : posY) + value.translation.height
                             let snapped = snapToEdge(
-                                x: newX, y: newY,
+                                x: finalX, y: finalY,
                                 screenWidth: geo.size.width,
                                 screenHeight: geo.size.height
                             )
-                            dragOffset = .zero
-                            isDragging = false
+                            // 릴리스 후에만 spring 애니메이션으로 가장자리 스냅
+                            withAnimation(.spring(response: 0.35, dampingFraction: 0.75)) {
+                                currentX = snapped.x
+                                currentY = snapped.y
+                            }
                             posX = snapped.x
                             posY = snapped.y
+                            isDragging = false
                         }
                 )
+                .onAppear {
+                    currentX = posX
+                    currentY = posY
+                }
                 .fullScreenCover(isPresented: $vm.showFullPlayer) {
                     FullPlayerView()
                 }
@@ -65,7 +75,6 @@ struct FloatingPlayerButton: View {
             playerViewModel.showFullPlayer = true
         } label: {
             ZStack {
-                // 앨범 아트 배경
                 if let url = playerViewModel.currentSong?.artworkURL {
                     CachedAsyncImage(url: url, size: buttonSize, cornerRadius: buttonSize / 2)
                 } else {
@@ -78,7 +87,7 @@ struct FloatingPlayerButton: View {
                         }
                 }
 
-                // 원형 프로그레스 링
+                // 프로그레스 링
                 Circle()
                     .stroke(Color.appAccent.opacity(0.15), lineWidth: 3)
                     .frame(width: buttonSize + 4, height: buttonSize + 4)
@@ -104,8 +113,6 @@ struct FloatingPlayerButton: View {
         .buttonStyle(.plain)
         .shadow(color: .black.opacity(0.2), radius: 8, x: 0, y: 4)
     }
-
-    // MARK: - 계산
 
     private var progress: CGFloat {
         guard playerViewModel.duration > 0 else { return 0 }

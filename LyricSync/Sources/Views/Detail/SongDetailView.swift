@@ -56,9 +56,6 @@ struct SongDetailView: View {
         .navigationTitle(song.title)
         .navigationBarTitleDisplayMode(.inline)
         .task {
-            if !isCurrentSong {
-                await playerViewModel.play(song: song)
-            }
             await loadUserTranslations()
         }
         .sheet(isPresented: $showTranslationInput) {
