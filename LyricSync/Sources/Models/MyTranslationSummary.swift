@@ -8,6 +8,8 @@ struct MyTranslationSummary: Identifiable, Sendable, Hashable {
     let artist: String
     let lineCount: Int
     let createdAt: Date?
+    /// 이 곡에 대한 번역 버전 수.
+    let versionCount: Int
     var artworkURL: URL?
 
     var id: String { appleMusicID }

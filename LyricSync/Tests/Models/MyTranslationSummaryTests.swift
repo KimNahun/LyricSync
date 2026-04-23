@@ -12,7 +12,8 @@ struct MyTranslationSummaryTests {
             title: "Test",
             artist: "Artist",
             lineCount: 5,
-            createdAt: nil
+            createdAt: nil,
+            versionCount: 1
         )
         #expect(summary.id == "abc123")
     }
@@ -24,7 +25,8 @@ struct MyTranslationSummaryTests {
             title: "My Song",
             artist: "My Artist",
             lineCount: 10,
-            createdAt: Date()
+            createdAt: Date(),
+            versionCount: 2
         )
 
         let song = summary.toSong()
@@ -40,8 +42,8 @@ struct MyTranslationSummaryTests {
 
     @Test("Hashable - 같은 appleMusicID면 동일")
     func hashable() {
-        let a = MyTranslationSummary(appleMusicID: "same", title: "A", artist: "X", lineCount: 1, createdAt: nil)
-        let b = MyTranslationSummary(appleMusicID: "same", title: "A", artist: "X", lineCount: 1, createdAt: nil)
+        let a = MyTranslationSummary(appleMusicID: "same", title: "A", artist: "X", lineCount: 1, createdAt: nil, versionCount: 1)
+        let b = MyTranslationSummary(appleMusicID: "same", title: "A", artist: "X", lineCount: 1, createdAt: nil, versionCount: 1)
         #expect(a == b)
     }
 }

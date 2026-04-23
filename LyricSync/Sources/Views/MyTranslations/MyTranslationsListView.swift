@@ -22,9 +22,6 @@ struct MyTranslationsListView: View {
             guard let userId = dbUserId else { return }
             await viewModel.fetchTranslations(userId: userId)
         }
-        .navigationDestination(for: Song.self) { song in
-            SongDetailView(song: song)
-        }
     }
 
     // MARK: - 번역 곡 목록
@@ -33,7 +30,9 @@ struct MyTranslationsListView: View {
         ScrollView {
             LazyVStack(spacing: 0) {
                 ForEach(viewModel.translations) { summary in
-                    NavigationLink(value: summary.toSong()) {
+                    NavigationLink {
+                        TranslationVersionsView(summary: summary)
+                    } label: {
                         translationRow(summary)
                             .padding(.horizontal, 16)
                             .padding(.vertical, 10)
@@ -68,16 +67,34 @@ struct MyTranslationsListView: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
 
-            // 번역 줄 수 배지
-            Text("\(summary.lineCount)줄")
-                .font(.caption2.weight(.semibold))
-                .foregroundStyle(Color.appStudy)
-                .padding(.horizontal, 8)
-                .padding(.vertical, 4)
-                .background(
-                    Color.appStudy.opacity(0.1),
-                    in: Capsule()
-                )
+            // 메타 정보
+            VStack(alignment: .trailing, spacing: 3) {
+                // 버전 수 + 줄 수
+                HStack(spacing: 4) {
+                    if summary.versionCount > 1 {
+                        Text("\(summary.versionCount)개")
+                            .font(.caption2.weight(.semibold))
+                            .foregroundStyle(Color.appAccent)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .background(Color.appAccent.opacity(0.1), in: Capsule())
+                    }
+
+                    Text("\(summary.lineCount)줄")
+                        .font(.caption2.weight(.semibold))
+                        .foregroundStyle(Color.appStudy)
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 2)
+                        .background(Color.appStudy.opacity(0.1), in: Capsule())
+                }
+
+                // 최종 수정일
+                if let date = summary.createdAt {
+                    Text(date.formatted(.dateTime.month().day()))
+                        .font(.caption2)
+                        .foregroundStyle(.tertiary)
+                }
+            }
 
             Image(systemName: "chevron.right")
                 .font(.caption2)

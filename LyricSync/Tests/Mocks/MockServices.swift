@@ -146,15 +146,16 @@ actor MockUserTranslationService: UserTranslationServiceProtocol {
     var fetchResult: [UserTranslationLine] = []
     var allResult: [MyTranslationSummary] = []
     var studiedIDsResult: Set<String> = []
+    var versionsResult: [TranslationVersion] = []
     var fetchCallCount = 0
     var saveCallCount = 0
 
-    func fetch(userId: Int, appleMusicID: String) async -> [UserTranslationLine] {
+    func fetch(userId: Int, appleMusicID: String, version: Int) async -> [UserTranslationLine] {
         fetchCallCount += 1
         return fetchResult
     }
 
-    func save(userId: Int, appleMusicID: String, title: String, artist: String, lines: [UserTranslationLine]) async {
+    func save(userId: Int, appleMusicID: String, title: String, artist: String, lines: [UserTranslationLine], version: Int) async {
         saveCallCount += 1
     }
 
@@ -162,8 +163,16 @@ actor MockUserTranslationService: UserTranslationServiceProtocol {
         return allResult
     }
 
+    func fetchVersions(userId: Int, appleMusicID: String) async -> [TranslationVersion] {
+        return versionsResult
+    }
+
     func fetchStudiedSongIDs(userId: Int) async -> Set<String> {
         return studiedIDsResult
+    }
+
+    func nextVersion(userId: Int, appleMusicID: String) async -> Int {
+        return (versionsResult.map(\.version).max() ?? 0) + 1
     }
 
     func setAllResult(_ summaries: [MyTranslationSummary]) {

@@ -32,6 +32,7 @@
 		6AED2C5069ECD44864DE6D30 /* TranslationInputView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01A75D61D9208373395B2A92 /* TranslationInputView.swift */; };
 		7A8B0342F0CA31608084365B /* SongRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A4092EB534D4C008F088602F /* SongRowView.swift */; };
 		880C6B6C35A5F630B2F0CACE /* PlayerViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 814EB36A95525FEF0AA5EE5C /* PlayerViewModel.swift */; };
+		8C3189AF69FE8B2C2F05BD26 /* AppColorsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6262F64106C634BC0F8665F3 /* AppColorsTests.swift */; };
 		90D1A06027E910E91C5EFDB5 /* MyTranslationsViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7524F7F6D2EEBD3A1D13F31C /* MyTranslationsViewModelTests.swift */; };
 		913F27669BEBBF6B18E4ED5A /* PlayerViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 30A4238FCAFFA69D435785CD /* PlayerViewModelTests.swift */; };
 		94B898778F6A5D0CD25C51E8 /* AppLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51191FABDEDDDBC288730464 /* AppLogger.swift */; };
@@ -40,7 +41,9 @@
 		9C77FE40D5CE2515F7D3DF30 /* AuthService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76411C69CC5C9D7291CE0366 /* AuthService.swift */; };
 		9CA730EA2609CD7F0C853403 /* LyricLine.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE53BB3FCBC7E647879DD6D3 /* LyricLine.swift */; };
 		AC33964236729C888B72A1D9 /* SongDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 45088F3D5FBC84C7CA6FB878 /* SongDetailView.swift */; };
+		B318C14CA24D2E485653DF8A /* TranslationVersionsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD96A8C3679281864FA3AD18 /* TranslationVersionsView.swift */; };
 		B5AAD7BCBC2CC7820B47D7C0 /* LyricSyncApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 410838B638613B640B2C35EA /* LyricSyncApp.swift */; };
+		BB1803513A38909AC6619BF0 /* TranslationVersion.swift in Sources */ = {isa = PBXBuildFile; fileRef = C864C2A9FD4060314F9F8EB6 /* TranslationVersion.swift */; };
 		C6F8475D5D2BD70C678CE6DB /* TranslationMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5176444F83B7B1D25CD87FDD /* TranslationMode.swift */; };
 		CB46C9147811B36C22E908AC /* AuthServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A82FC01ECAE291ED90AEFC6 /* AuthServiceTests.swift */; };
 		CE51CBA48C0AE9CF6C765513 /* UserTranslationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57F25AAE6E83E74F3C8A0A57 /* UserTranslationService.swift */; };
@@ -95,6 +98,7 @@
 		53AC07037D3252DAAF90D526 /* SearchService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchService.swift; sourceTree = "<group>"; };
 		57F25AAE6E83E74F3C8A0A57 /* UserTranslationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserTranslationService.swift; sourceTree = "<group>"; };
 		5B2A17F832F34AFBB2DA7A0E /* ChartListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChartListView.swift; sourceTree = "<group>"; };
+		6262F64106C634BC0F8665F3 /* AppColorsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppColorsTests.swift; sourceTree = "<group>"; };
 		62D5C99856FA2E26C85682F7 /* UserTranslationLineTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserTranslationLineTests.swift; sourceTree = "<group>"; };
 		64D29B89BB0B4E5EA3B63BF0 /* TranslatedLyricService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranslatedLyricService.swift; sourceTree = "<group>"; };
 		707832CE148DE6A1820C61CF /* ErrorTypeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ErrorTypeTests.swift; sourceTree = "<group>"; };
@@ -116,8 +120,10 @@
 		AA57CA1430AB51DEB1BB158C /* MockServices.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockServices.swift; sourceTree = "<group>"; };
 		AF5103FDD2AA8745C3C4B7F1 /* LyricStateTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LyricStateTests.swift; sourceTree = "<group>"; };
 		BA01BB9BC465DB690F3B2580 /* TimeFormatUtil.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeFormatUtil.swift; sourceTree = "<group>"; };
+		C864C2A9FD4060314F9F8EB6 /* TranslationVersion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranslationVersion.swift; sourceTree = "<group>"; };
 		C94FB79C975509C69FC9B705 /* LyricSync.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = LyricSync.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		C9611DB282DA3C1528D84016 /* UserTranslationServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserTranslationServiceTests.swift; sourceTree = "<group>"; };
+		CD96A8C3679281864FA3AD18 /* TranslationVersionsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranslationVersionsView.swift; sourceTree = "<group>"; };
 		CE4AC6EB35F4EA82769424A9 /* ChartService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChartService.swift; sourceTree = "<group>"; };
 		CE53BB3FCBC7E647879DD6D3 /* LyricLine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LyricLine.swift; sourceTree = "<group>"; };
 		DC5136152418FCF3C21A65C7 /* LyricServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LyricServiceTests.swift; sourceTree = "<group>"; };
@@ -126,7 +132,7 @@
 		F1BD95CA70E43D5B17FD52B1 /* KeychainServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainServiceTests.swift; sourceTree = "<group>"; };
 		F57E44667DE62FF3E5DF3091 /* LyricSyncTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = LyricSyncTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		F6A3F54036DA3B2A61EA7A69 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
-		"TEMP_1AEF2C32-4662-47D8-BD46-89841E90C4AA" /* Secrets.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.xcconfig; sourceTree = "<group>"; };
+		"TEMP_FE7017BF-D58E-4EA8-AE52-A95B969AD00E" /* Secrets.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.xcconfig; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -257,6 +263,7 @@
 			isa = PBXGroup;
 			children = (
 				33186C4E7A0E4D5170F4B359 /* MyTranslationsListView.swift */,
+				CD96A8C3679281864FA3AD18 /* TranslationVersionsView.swift */,
 			);
 			path = MyTranslations;
 			sourceTree = "<group>";
@@ -299,6 +306,7 @@
 				E9C7B990834034CD4E4144A5 /* MyTranslationSummary.swift */,
 				523B094384BCAEEF93813045 /* Song.swift */,
 				5176444F83B7B1D25CD87FDD /* TranslationMode.swift */,
+				C864C2A9FD4060314F9F8EB6 /* TranslationVersion.swift */,
 				EC0E3ECA4BB7F09C41060B47 /* UserTranslationLine.swift */,
 			);
 			path = Models;
@@ -325,6 +333,7 @@
 		A4107D4AA238E285CBECC9C4 /* Utilities */ = {
 			isa = PBXGroup;
 			children = (
+				6262F64106C634BC0F8665F3 /* AppColorsTests.swift */,
 				77AA900A958D0ADF37C813C8 /* TimeFormatUtilTests.swift */,
 			);
 			path = Utilities;
@@ -391,10 +400,10 @@
 			path = Chart;
 			sourceTree = "<group>";
 		};
-		"TEMP_7B4299C3-8554-4A07-990D-181C7ABD3C59" /* LyricSync */ = {
+		"TEMP_AC3CBB95-5C91-4463-94B4-9D6AE004BDCB" /* LyricSync */ = {
 			isa = PBXGroup;
 			children = (
-				"TEMP_1AEF2C32-4662-47D8-BD46-89841E90C4AA" /* Secrets.xcconfig */,
+				"TEMP_FE7017BF-D58E-4EA8-AE52-A95B969AD00E" /* Secrets.xcconfig */,
 			);
 			path = LyricSync;
 			sourceTree = "<group>";
@@ -512,6 +521,8 @@
 				09E1B73625A7763A1540B439 /* TranslatedLyricService.swift in Sources */,
 				6AED2C5069ECD44864DE6D30 /* TranslationInputView.swift in Sources */,
 				C6F8475D5D2BD70C678CE6DB /* TranslationMode.swift in Sources */,
+				BB1803513A38909AC6619BF0 /* TranslationVersion.swift in Sources */,
+				B318C14CA24D2E485653DF8A /* TranslationVersionsView.swift in Sources */,
 				9C17C3D918A455E7543C0E6D /* UserTranslationLine.swift in Sources */,
 				CE51CBA48C0AE9CF6C765513 /* UserTranslationService.swift in Sources */,
 			);
@@ -521,6 +532,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				8C3189AF69FE8B2C2F05BD26 /* AppColorsTests.swift in Sources */,
 				CB46C9147811B36C22E908AC /* AuthServiceTests.swift in Sources */,
 				18A516220D6F801AF55F5139 /* ChartViewModelTests.swift in Sources */,
 				599280C107622A0A487E4599 /* ErrorTypeTests.swift in Sources */,
@@ -555,7 +567,7 @@
 /* Begin XCBuildConfiguration section */
 		11C46FC86FB84F18045D3416 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = "TEMP_1AEF2C32-4662-47D8-BD46-89841E90C4AA" /* Secrets.xcconfig */;
+			baseConfigurationReference = "TEMP_FE7017BF-D58E-4EA8-AE52-A95B969AD00E" /* Secrets.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = Sources/LyricSync.entitlements;
@@ -681,7 +693,7 @@
 		};
 		DF40C97E8D001E9352C0C93A /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = "TEMP_1AEF2C32-4662-47D8-BD46-89841E90C4AA" /* Secrets.xcconfig */;
+			baseConfigurationReference = "TEMP_FE7017BF-D58E-4EA8-AE52-A95B969AD00E" /* Secrets.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = Sources/LyricSync.entitlements;

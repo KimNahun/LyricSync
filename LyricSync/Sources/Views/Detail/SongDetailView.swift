@@ -11,6 +11,9 @@ struct SongDetailView: View {
     @State private var showTranslationInput = false
     @State private var isStudyMode = false
 
+    /// 현재 편집 중인 번역 버전. 기본 1.
+    var translationVersion: Int = 1
+
     private let userTranslationService = UserTranslationService()
 
     private var isCurrentSong: Bool {
@@ -124,7 +127,7 @@ struct SongDetailView: View {
 
     private func loadUserTranslations() async {
         guard let userId = dbUserId else { return }
-        let lines = await userTranslationService.fetch(userId: userId, appleMusicID: song.id)
+        let lines = await userTranslationService.fetch(userId: userId, appleMusicID: song.id, version: translationVersion)
         for line in lines {
             userTranslations[line.index] = line.translated
         }
@@ -149,7 +152,8 @@ struct SongDetailView: View {
             appleMusicID: song.id,
             title: song.title,
             artist: song.artistName,
-            lines: translationLines
+            lines: translationLines,
+            version: translationVersion
         )
     }
 

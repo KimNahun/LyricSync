@@ -25,8 +25,8 @@ struct MyTranslationsViewModelTests {
     func fetchSuccess() async {
         let service = MockUserTranslationService()
         await service.setAllResult([
-            MyTranslationSummary(appleMusicID: "id1", title: "Song 1", artist: "Artist 1", lineCount: 5, createdAt: nil),
-            MyTranslationSummary(appleMusicID: "id2", title: "Song 2", artist: "Artist 2", lineCount: 3, createdAt: nil),
+            MyTranslationSummary(appleMusicID: "id1", title: "Song 1", artist: "Artist 1", lineCount: 5, createdAt: nil, versionCount: 1),
+            MyTranslationSummary(appleMusicID: "id2", title: "Song 2", artist: "Artist 2", lineCount: 3, createdAt: nil, versionCount: 1),
         ])
 
         let (vm, _) = makeSUT(service: service)
