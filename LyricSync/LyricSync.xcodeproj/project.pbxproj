@@ -52,6 +52,7 @@
 		DDE06C078AAC3DA41FC2D53C /* LyricLineView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71F7FE273C0557D6FB8050D8 /* LyricLineView.swift */; };
 		DF625431718CEEBDD6AC3446 /* ChartViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C84505F86BCEB8EC3E6FA0B /* ChartViewModel.swift */; };
 		E1C986E09296C6C628439D05 /* UserTranslationServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9611DB282DA3C1528D84016 /* UserTranslationServiceTests.swift */; };
+		E7467758ABDCBFBF160C717B /* AppColors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0206D1BFE687F5BE041E8D79 /* AppColors.swift */; };
 		E7F189884E6E017CB56B22F9 /* MyTranslationSummary.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9C7B990834034CD4E4144A5 /* MyTranslationSummary.swift */; };
 		EB81AD5C1356BF07C84050B6 /* UserTranslationLineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62D5C99856FA2E26C85682F7 /* UserTranslationLineTests.swift */; };
 		ED67EFD84712F72A3C8DC4CA /* LyricServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC5136152418FCF3C21A65C7 /* LyricServiceTests.swift */; };
@@ -71,6 +72,7 @@
 
 /* Begin PBXFileReference section */
 		01A75D61D9208373395B2A92 /* TranslationInputView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranslationInputView.swift; sourceTree = "<group>"; };
+		0206D1BFE687F5BE041E8D79 /* AppColors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppColors.swift; sourceTree = "<group>"; };
 		02C53A8D24E6BCF8B67C2BF1 /* FloatingPlayerButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FloatingPlayerButton.swift; sourceTree = "<group>"; };
 		07A0B1F43832FFA376ABC00C /* LoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
 		0961F37BA375D21E486C18CB /* LyricLineTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LyricLineTests.swift; sourceTree = "<group>"; };
@@ -124,7 +126,7 @@
 		F1BD95CA70E43D5B17FD52B1 /* KeychainServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainServiceTests.swift; sourceTree = "<group>"; };
 		F57E44667DE62FF3E5DF3091 /* LyricSyncTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = LyricSyncTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		F6A3F54036DA3B2A61EA7A69 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
-		"TEMP_A1C6C2B0-B500-495A-9E79-3EF972B156A6" /* Secrets.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.xcconfig; sourceTree = "<group>"; };
+		"TEMP_1AEF2C32-4662-47D8-BD46-89841E90C4AA" /* Secrets.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.xcconfig; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -313,6 +315,7 @@
 		A1B23F80BE2D01B12A61C84B /* Shared */ = {
 			isa = PBXGroup;
 			children = (
+				0206D1BFE687F5BE041E8D79 /* AppColors.swift */,
 				51191FABDEDDDBC288730464 /* AppLogger.swift */,
 				BA01BB9BC465DB690F3B2580 /* TimeFormatUtil.swift */,
 			);
@@ -388,10 +391,10 @@
 			path = Chart;
 			sourceTree = "<group>";
 		};
-		"TEMP_D6846BDA-42A7-4B07-BD34-98ACEAD344A8" /* LyricSync */ = {
+		"TEMP_7B4299C3-8554-4A07-990D-181C7ABD3C59" /* LyricSync */ = {
 			isa = PBXGroup;
 			children = (
-				"TEMP_A1C6C2B0-B500-495A-9E79-3EF972B156A6" /* Secrets.xcconfig */,
+				"TEMP_1AEF2C32-4662-47D8-BD46-89841E90C4AA" /* Secrets.xcconfig */,
 			);
 			path = LyricSync;
 			sourceTree = "<group>";
@@ -478,6 +481,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E7467758ABDCBFBF160C717B /* AppColors.swift in Sources */,
 				94B898778F6A5D0CD25C51E8 /* AppLogger.swift in Sources */,
 				9C77FE40D5CE2515F7D3DF30 /* AuthService.swift in Sources */,
 				953746B690527AAB8AB16E33 /* CachedAsyncImage.swift in Sources */,
@@ -551,7 +555,7 @@
 /* Begin XCBuildConfiguration section */
 		11C46FC86FB84F18045D3416 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = "TEMP_A1C6C2B0-B500-495A-9E79-3EF972B156A6" /* Secrets.xcconfig */;
+			baseConfigurationReference = "TEMP_1AEF2C32-4662-47D8-BD46-89841E90C4AA" /* Secrets.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = Sources/LyricSync.entitlements;
@@ -677,7 +681,7 @@
 		};
 		DF40C97E8D001E9352C0C93A /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = "TEMP_A1C6C2B0-B500-495A-9E79-3EF972B156A6" /* Secrets.xcconfig */;
+			baseConfigurationReference = "TEMP_1AEF2C32-4662-47D8-BD46-89841E90C4AA" /* Secrets.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = Sources/LyricSync.entitlements;

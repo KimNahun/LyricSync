@@ -38,17 +38,17 @@ struct SongRowView: View {
                 if hasStudied {
                     Image(systemName: "checkmark.circle.fill")
                         .font(.caption2)
-                        .foregroundStyle(Color.green)
+                        .foregroundStyle(Color.appStudy)
                 }
 
                 if hasTranslation {
                     Text("번역")
                         .font(.caption2.weight(.semibold))
-                        .foregroundStyle(Color.accentColor)
+                        .foregroundStyle(Color.appAccent)
                         .padding(.horizontal, 7)
                         .padding(.vertical, 3)
                         .background(
-                            Color.accentColor.opacity(0.12),
+                            Color.appAccent.opacity(0.12),
                             in: Capsule()
                         )
                 }

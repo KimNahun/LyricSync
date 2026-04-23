@@ -105,7 +105,7 @@ struct FullPlayerView: View {
                 } label: {
                     Image(systemName: playerViewModel.isPlaying ? "pause.circle.fill" : "play.circle.fill")
                         .font(.title)
-                        .foregroundStyle(Color.accentColor)
+                        .foregroundStyle(Color.appAccent)
                 }
                 .frame(width: 44, height: 44)
                 .accessibilityLabel(playerViewModel.isPlaying ? "일시정지" : "재생")
@@ -128,7 +128,7 @@ struct FullPlayerView: View {
                         }
                     }
                 )
-                .tint(.accentColor)
+                .tint(Color.appAccent)
 
                 HStack {
                     Text(TimeFormatUtil.format(playerViewModel.currentTime))
@@ -205,9 +205,9 @@ struct FullPlayerView: View {
         let translatedLines = playerViewModel.translatedLines
 
         return ScrollView {
-            LazyVStack(spacing: 6) {
+            LazyVStack(spacing: 0) {
                 ForEach(Array(lines.enumerated()), id: \.offset) { index, line in
-                    VStack(spacing: 3) {
+                    VStack(spacing: 4) {
                         // 원본 가사
                         LyricLineView(
                             line: line,
@@ -228,12 +228,12 @@ struct FullPlayerView: View {
                             )
                         }
                     }
+                    .padding(.vertical, 8)
                     .id(index)
                 }
             }
             .padding(.vertical, 16)
             .padding(.horizontal, 20)
-            .padding(.bottom, 60)
         }
         .simultaneousGesture(
             DragGesture(minimumDistance: 5)
@@ -256,11 +256,10 @@ struct FullPlayerView: View {
         case .simultaneous:
             Text(text)
                 .font(.footnote)
-                .foregroundStyle(isActive ? Color.accentColor.opacity(0.8) : Color.secondary.opacity(0.5))
+                .foregroundStyle(isActive ? Color.appAccent.opacity(0.8) : Color.secondary.opacity(0.5))
                 .multilineTextAlignment(.center)
                 .frame(maxWidth: .infinity)
-                .padding(.bottom, 2)
-
+                
         case .hidden:
             Button {
                 withAnimation(.easeInOut(duration: 0.2)) {
@@ -271,7 +270,7 @@ struct FullPlayerView: View {
                     if isRevealed {
                         Text(text)
                             .font(.footnote)
-                            .foregroundStyle(isActive ? Color.accentColor.opacity(0.8) : Color.secondary.opacity(0.6))
+                            .foregroundStyle(isActive ? Color.appAccent.opacity(0.8) : Color.secondary.opacity(0.6))
                             .multilineTextAlignment(.center)
                             .frame(maxWidth: .infinity)
                             .transition(.opacity.combined(with: .scale(scale: 0.95)))
@@ -290,8 +289,7 @@ struct FullPlayerView: View {
                 .frame(maxWidth: .infinity)
             }
             .buttonStyle(.plain)
-            .padding(.bottom, 2)
-            .accessibilityLabel(isRevealed ? "번역 숨기기" : "번역 보기")
+                        .accessibilityLabel(isRevealed ? "번역 숨기기" : "번역 보기")
         }
     }
 

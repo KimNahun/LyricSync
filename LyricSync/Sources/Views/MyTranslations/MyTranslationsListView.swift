@@ -51,16 +51,8 @@ struct MyTranslationsListView: View {
 
     private func translationRow(_ summary: MyTranslationSummary) -> some View {
         HStack(spacing: 12) {
-            // 아이콘
-            ZStack {
-                RoundedRectangle(cornerRadius: 10)
-                    .fill(Color.green.opacity(0.12))
-                    .frame(width: 48, height: 48)
-
-                Image(systemName: "text.book.closed.fill")
-                    .font(.title3)
-                    .foregroundStyle(Color.green)
-            }
+            // 앨범 아트
+            CachedAsyncImage(url: summary.artworkURL, size: 48)
 
             // 곡 정보
             VStack(alignment: .leading, spacing: 3) {
@@ -79,11 +71,11 @@ struct MyTranslationsListView: View {
             // 번역 줄 수 배지
             Text("\(summary.lineCount)줄")
                 .font(.caption2.weight(.semibold))
-                .foregroundStyle(Color.green)
+                .foregroundStyle(Color.appStudy)
                 .padding(.horizontal, 8)
                 .padding(.vertical, 4)
                 .background(
-                    Color.green.opacity(0.1),
+                    Color.appStudy.opacity(0.1),
                     in: Capsule()
                 )
 
@@ -98,7 +90,7 @@ struct MyTranslationsListView: View {
 
     private var emptyView: some View {
         VStack(spacing: 16) {
-            Image(systemName: "text.book.closed")
+            Image(systemName: "character.book.closed")
                 .font(.largeTitle)
                 .foregroundStyle(.tertiary)
 

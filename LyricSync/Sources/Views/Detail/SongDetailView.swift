@@ -105,11 +105,11 @@ struct SongDetailView: View {
                         Text("공부")
                             .font(.caption.weight(.medium))
                     }
-                    .foregroundStyle(isStudyMode ? Color.green : Color.secondary)
+                    .foregroundStyle(isStudyMode ? Color.appStudy : Color.secondary)
                     .padding(.horizontal, 12)
                     .padding(.vertical, 6)
                     .background(
-                        isStudyMode ? Color.green.opacity(0.12) : Color(.tertiarySystemFill),
+                        isStudyMode ? Color.appStudy.opacity(0.12) : Color(.tertiarySystemFill),
                         in: Capsule()
                     )
                 }
@@ -188,7 +188,7 @@ struct SongDetailView: View {
                 } label: {
                     Image(systemName: isPlaying ? "pause.circle.fill" : "play.circle.fill")
                         .font(.title)
-                        .foregroundStyle(Color.accentColor)
+                        .foregroundStyle(Color.appAccent)
                 }
                 .frame(width: 44, height: 44)
             }
@@ -210,7 +210,7 @@ struct SongDetailView: View {
                             }
                         }
                     )
-                    .tint(.accentColor)
+                    .tint(Color.appAccent)
 
                     HStack {
                         Text(TimeFormatUtil.format(playerViewModel.currentTime))
@@ -267,9 +267,9 @@ struct SongDetailView: View {
         let translatedLines = playerViewModel.translatedLines
 
         return ScrollView {
-            LazyVStack(spacing: 6) {
+            LazyVStack(spacing: 0) {
                 ForEach(Array(lines.enumerated()), id: \.offset) { index, line in
-                    VStack(spacing: 3) {
+                    VStack(spacing: 4) {
                         // 원본 가사
                         LyricLineView(
                             line: line,
@@ -279,71 +279,88 @@ struct SongDetailView: View {
                             }
                         )
 
-                        // 유저 번역 (있으면 항상 표시)
-                        if let userTrans = userTranslations[index] {
-                            HStack(spacing: 4) {
-                                Text(userTrans)
-                                    .font(.footnote)
-                                    .foregroundStyle(Color.green.opacity(0.8))
-                                    .multilineTextAlignment(.center)
-                                    .frame(maxWidth: .infinity)
+                        if isStudyMode {
+                            // 공부 모드: 내 번역만 표시, AI 번역 완전 숨김
+                            if let userTrans = userTranslations[index] {
+                                userTranslationCard(text: userTrans, index: index)
+                            } else if dbUserId != nil {
+                                addTranslationButton(index: index)
+                            }
+                        } else {
+                            // 일반 모드: 내 번역 있으면 표시 + AI 번역 표시
+                            if let userTrans = userTranslations[index] {
+                                userTranslationCard(text: userTrans, index: index)
+                            }
 
-                                Image(systemName: "pencil")
-                                    .font(.caption2)
-                                    .foregroundStyle(Color.green.opacity(0.5))
-                            }
-                            .padding(.bottom, 2)
-                            .onTapGesture {
-                                editingLineIndex = index
-                                showTranslationInput = true
-                            }
-                        }
-                        // 공부 모드일 때 — 유저 번역 없는 줄에 입력 버튼
-                        else if isStudyMode {
-                            Button {
-                                editingLineIndex = index
-                                showTranslationInput = true
-                            } label: {
-                                HStack(spacing: 4) {
-                                    Image(systemName: "plus.circle")
-                                        .font(.caption2)
-                                    Text("내 번역 쓰기")
-                                        .font(.caption2)
-                                }
-                                .foregroundStyle(Color.green.opacity(0.5))
-                                .padding(.horizontal, 10)
-                                .padding(.vertical, 4)
-                                .background(
-                                    Capsule()
-                                        .strokeBorder(Color.green.opacity(0.2), lineWidth: 1)
+                            // AI 번역 (내 번역이 없는 줄에만)
+                            if let tLines = translatedLines, index < tLines.count,
+                               userTranslations[index] == nil {
+                                translatedLineView(
+                                    text: tLines[index].text,
+                                    index: index,
+                                    isActive: playerViewModel.currentLyricIndex == index
                                 )
                             }
-                            .buttonStyle(.plain)
-                            .padding(.bottom, 2)
-                        }
-
-                        // AI 번역 (유저 번역과 별도로 표시)
-                        if let tLines = translatedLines, index < tLines.count,
-                           userTranslations[index] == nil {
-                            translatedLineView(
-                                text: tLines[index].text,
-                                index: index,
-                                isActive: playerViewModel.currentLyricIndex == index
-                            )
                         }
                     }
+                    .padding(.vertical, 8)
                     .id(index)
                 }
             }
             .padding(.vertical, 16)
             .padding(.horizontal, 20)
-            .padding(.bottom, 16)
         }
         .simultaneousGesture(
             DragGesture(minimumDistance: 5)
                 .onChanged { _ in playerViewModel.onUserScrollBegan() }
                 .onEnded { _ in playerViewModel.onUserScrollEnded() }
         )
+    }
+
+    // MARK: - 유저 번역 카드
+
+    private func userTranslationCard(text: String, index: Int) -> some View {
+        Button {
+            editingLineIndex = index
+            showTranslationInput = true
+        } label: {
+            HStack(spacing: 8) {
+                Text(text)
+                    .font(.footnote)
+                    .foregroundStyle(Color.appStudy)
+                    .multilineTextAlignment(.center)
+                    .frame(maxWidth: .infinity)
+
+                Text("수정")
+                    .font(.caption2)
+                    .foregroundStyle(Color.appStudy.opacity(0.6))
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .background(Color.appStudy.opacity(0.08), in: RoundedRectangle(cornerRadius: 8))
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+    }
+
+    // MARK: - 번역 추가 버튼
+
+    private func addTranslationButton(index: Int) -> some View {
+        Button {
+            editingLineIndex = index
+            showTranslationInput = true
+        } label: {
+            Text("번역 쓰기")
+                .font(.caption2)
+                .foregroundStyle(Color.appStudy.opacity(0.5))
+                .padding(.horizontal, 12)
+                .padding(.vertical, 6)
+                .background(
+                    Capsule()
+                        .strokeBorder(Color.appStudy.opacity(0.2), lineWidth: 1)
+                )
+        }
+        .buttonStyle(.plain)
     }
 
     // MARK: - AI 번역 줄 표시
@@ -356,7 +373,7 @@ struct SongDetailView: View {
         case .simultaneous:
             Text(text)
                 .font(.footnote)
-                .foregroundStyle(isActive ? Color.accentColor.opacity(0.8) : Color.secondary.opacity(0.5))
+                .foregroundStyle(isActive ? Color.appAccent.opacity(0.8) : Color.secondary.opacity(0.5))
                 .multilineTextAlignment(.center)
                 .frame(maxWidth: .infinity)
                 .padding(.bottom, 2)
@@ -370,7 +387,7 @@ struct SongDetailView: View {
                 if isRevealed {
                     Text(text)
                         .font(.footnote)
-                        .foregroundStyle(isActive ? Color.accentColor.opacity(0.8) : Color.secondary.opacity(0.6))
+                        .foregroundStyle(isActive ? Color.appAccent.opacity(0.8) : Color.secondary.opacity(0.6))
                         .multilineTextAlignment(.center)
                         .frame(maxWidth: .infinity)
                         .transition(.opacity.combined(with: .scale(scale: 0.95)))

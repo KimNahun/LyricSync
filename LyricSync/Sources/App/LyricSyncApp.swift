@@ -62,7 +62,7 @@ struct LyricSyncApp: App {
                         .navigationBarTitleDisplayMode(.large)
                 }
                 .tabItem {
-                    Label("내 번역", systemImage: "text.book.closed")
+                    Label("내 번역", systemImage: "character.book.closed")
                 }
             }
 
@@ -72,6 +72,7 @@ struct LyricSyncApp: App {
                     .transition(.scale.combined(with: .opacity))
             }
         }
+        .tint(Color.appAccent)
         .environment(playerViewModel)
         .environment(\.dbUserId, dbUserId)
     }

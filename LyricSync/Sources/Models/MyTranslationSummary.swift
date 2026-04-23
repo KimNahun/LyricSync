@@ -8,6 +8,7 @@ struct MyTranslationSummary: Identifiable, Sendable, Hashable {
     let artist: String
     let lineCount: Int
     let createdAt: Date?
+    var artworkURL: URL?
 
     var id: String { appleMusicID }
 
@@ -18,7 +19,7 @@ struct MyTranslationSummary: Identifiable, Sendable, Hashable {
             title: title,
             artistName: artist,
             albumTitle: nil,
-            artworkURL: nil,
+            artworkURL: artworkURL,
             duration: nil,
             rank: nil,
             musicKitID: MusicItemID(appleMusicID)
