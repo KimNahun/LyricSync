@@ -40,6 +40,7 @@
 		9C17C3D918A455E7543C0E6D /* UserTranslationLine.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC0E3ECA4BB7F09C41060B47 /* UserTranslationLine.swift */; };
 		9C77FE40D5CE2515F7D3DF30 /* AuthService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76411C69CC5C9D7291CE0366 /* AuthService.swift */; };
 		9CA730EA2609CD7F0C853403 /* LyricLine.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE53BB3FCBC7E647879DD6D3 /* LyricLine.swift */; };
+		9FB0230CF453156050F40C3C /* TranslationVersionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E46CDFA52D357699EB98C651 /* TranslationVersionTests.swift */; };
 		AC33964236729C888B72A1D9 /* SongDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 45088F3D5FBC84C7CA6FB878 /* SongDetailView.swift */; };
 		B318C14CA24D2E485653DF8A /* TranslationVersionsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD96A8C3679281864FA3AD18 /* TranslationVersionsView.swift */; };
 		B5AAD7BCBC2CC7820B47D7C0 /* LyricSyncApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 410838B638613B640B2C35EA /* LyricSyncApp.swift */; };
@@ -127,12 +128,13 @@
 		CE4AC6EB35F4EA82769424A9 /* ChartService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChartService.swift; sourceTree = "<group>"; };
 		CE53BB3FCBC7E647879DD6D3 /* LyricLine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LyricLine.swift; sourceTree = "<group>"; };
 		DC5136152418FCF3C21A65C7 /* LyricServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LyricServiceTests.swift; sourceTree = "<group>"; };
+		E46CDFA52D357699EB98C651 /* TranslationVersionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranslationVersionTests.swift; sourceTree = "<group>"; };
 		E9C7B990834034CD4E4144A5 /* MyTranslationSummary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MyTranslationSummary.swift; sourceTree = "<group>"; };
 		EC0E3ECA4BB7F09C41060B47 /* UserTranslationLine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserTranslationLine.swift; sourceTree = "<group>"; };
 		F1BD95CA70E43D5B17FD52B1 /* KeychainServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainServiceTests.swift; sourceTree = "<group>"; };
 		F57E44667DE62FF3E5DF3091 /* LyricSyncTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = LyricSyncTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		F6A3F54036DA3B2A61EA7A69 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
-		"TEMP_FE7017BF-D58E-4EA8-AE52-A95B969AD00E" /* Secrets.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.xcconfig; sourceTree = "<group>"; };
+		"TEMP_414DE110-E4C2-45FA-8BD8-992CDBE6E5A5" /* Secrets.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.xcconfig; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -293,6 +295,7 @@
 				2FA402AD0E387265D493BB57 /* MyTranslationSummaryTests.swift */,
 				4505D61D563278CB9542C418 /* SongTests.swift */,
 				300D1B411FD0AE566CAA5BD3 /* TranslationModeTests.swift */,
+				E46CDFA52D357699EB98C651 /* TranslationVersionTests.swift */,
 				62D5C99856FA2E26C85682F7 /* UserTranslationLineTests.swift */,
 			);
 			path = Models;
@@ -400,10 +403,10 @@
 			path = Chart;
 			sourceTree = "<group>";
 		};
-		"TEMP_AC3CBB95-5C91-4463-94B4-9D6AE004BDCB" /* LyricSync */ = {
+		"TEMP_1CE8FFEA-5A09-4C55-9685-8A4F98ADE611" /* LyricSync */ = {
 			isa = PBXGroup;
 			children = (
-				"TEMP_FE7017BF-D58E-4EA8-AE52-A95B969AD00E" /* Secrets.xcconfig */,
+				"TEMP_414DE110-E4C2-45FA-8BD8-992CDBE6E5A5" /* Secrets.xcconfig */,
 			);
 			path = LyricSync;
 			sourceTree = "<group>";
@@ -549,6 +552,7 @@
 				02B13FABDB1BAAF9CB58FB36 /* TimeFormatUtilTests.swift in Sources */,
 				228259222D8482149792C39C /* TranslatedLyricServiceTests.swift in Sources */,
 				DAE40D72213963B379CC8F6F /* TranslationModeTests.swift in Sources */,
+				9FB0230CF453156050F40C3C /* TranslationVersionTests.swift in Sources */,
 				EB81AD5C1356BF07C84050B6 /* UserTranslationLineTests.swift in Sources */,
 				E1C986E09296C6C628439D05 /* UserTranslationServiceTests.swift in Sources */,
 			);
@@ -567,7 +571,7 @@
 /* Begin XCBuildConfiguration section */
 		11C46FC86FB84F18045D3416 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = "TEMP_FE7017BF-D58E-4EA8-AE52-A95B969AD00E" /* Secrets.xcconfig */;
+			baseConfigurationReference = "TEMP_414DE110-E4C2-45FA-8BD8-992CDBE6E5A5" /* Secrets.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = Sources/LyricSync.entitlements;
@@ -693,7 +697,7 @@
 		};
 		DF40C97E8D001E9352C0C93A /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = "TEMP_FE7017BF-D58E-4EA8-AE52-A95B969AD00E" /* Secrets.xcconfig */;
+			baseConfigurationReference = "TEMP_414DE110-E4C2-45FA-8BD8-992CDBE6E5A5" /* Secrets.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = Sources/LyricSync.entitlements;
