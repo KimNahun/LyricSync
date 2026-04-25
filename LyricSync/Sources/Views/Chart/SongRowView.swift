@@ -3,7 +3,6 @@ import SwiftUI
 /// 차트/검색 리스트에서 개별 곡을 표시하는 행 컴포넌트.
 struct SongRowView: View {
     let song: Song
-    var hasTranslation: Bool = false
     var hasStudied: Bool = false
 
     var body: some View {
@@ -34,24 +33,10 @@ struct SongRowView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
 
             // 배지 영역
-            HStack(spacing: 4) {
-                if hasStudied {
-                    Image(systemName: "checkmark.circle.fill")
-                        .font(.caption2)
-                        .foregroundStyle(Color.appStudy)
-                }
-
-                if hasTranslation {
-                    Text("번역")
-                        .font(.caption2.weight(.semibold))
-                        .foregroundStyle(Color.appAccent)
-                        .padding(.horizontal, 7)
-                        .padding(.vertical, 3)
-                        .background(
-                            Color.appAccent.opacity(0.12),
-                            in: Capsule()
-                        )
-                }
+            if hasStudied {
+                Image(systemName: "checkmark.circle.fill")
+                    .font(.caption2)
+                    .foregroundStyle(Color.appStudy)
             }
 
             // 셰브론
@@ -61,6 +46,6 @@ struct SongRowView: View {
         }
         .contentShape(Rectangle())
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(song.rank.map { "\($0)위, " } ?? "")\(song.title), \(song.artistName)\(hasTranslation ? ", 번역 있음" : "")\(hasStudied ? ", 공부 완료" : "")")
+        .accessibilityLabel("\(song.rank.map { "\($0)위, " } ?? "")\(song.title), \(song.artistName)\(hasStudied ? ", 공부 완료" : "")")
     }
 }

@@ -98,7 +98,6 @@ struct ChartListView: View {
                     NavigationLink(value: song) {
                         SongRowView(
                             song: song,
-                            hasTranslation: viewModel.hasTranslation(for: song),
                             hasStudied: viewModel.hasStudied(for: song)
                         )
                         .padding(.horizontal, 16)
@@ -140,7 +139,6 @@ struct ChartListView: View {
                         NavigationLink(value: song) {
                             SongRowView(
                                 song: song,
-                                hasTranslation: viewModel.hasTranslation(for: song),
                                 hasStudied: viewModel.hasStudied(for: song)
                             )
                             .padding(.horizontal, 16)

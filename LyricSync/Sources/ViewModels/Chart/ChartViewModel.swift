@@ -20,11 +20,6 @@ final class ChartViewModel {
     private(set) var isSearching: Bool = false
     var isSearchActive: Bool { !searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
 
-    // MARK: - 번역 배지
-
-    /// 번역이 있는 곡의 apple_music_id 집합.
-    private(set) var translatedSongIDs: Set<String> = []
-
     // MARK: - 공부 배지
 
     /// 유저가 번역(공부)한 곡의 apple_music_id 집합.
@@ -32,21 +27,16 @@ final class ChartViewModel {
 
     private let chartService: any ChartServiceProtocol
     private let searchService: any SearchServiceProtocol
-    private let translatedLyricService: any TranslatedLyricServiceProtocol
     private let userTranslationService: any UserTranslationServiceProtocol
     private var searchTask: Task<Void, Never>?
-    /// 이미 배치 조회한 ID. 세션 내 캐시.
-    private var checkedIDs: Set<String> = []
 
     init(
         chartService: any ChartServiceProtocol = ChartService(),
         searchService: any SearchServiceProtocol = SearchService(),
-        translatedLyricService: any TranslatedLyricServiceProtocol = TranslatedLyricService(),
         userTranslationService: any UserTranslationServiceProtocol = UserTranslationService()
     ) {
         self.chartService = chartService
         self.searchService = searchService
-        self.translatedLyricService = translatedLyricService
         self.userTranslationService = userTranslationService
     }
 
@@ -66,10 +56,6 @@ final class ChartViewModel {
 
         do {
             songs = try await chartService.fetchChart()
-            // 차트 로드 후 번역 배지 비동기 조회
-            Task {
-                await fetchTranslationStatus(for: songs)
-            }
         } catch {
             errorMessage = error.localizedDescription
         }
@@ -97,31 +83,12 @@ final class ChartViewModel {
                 let results = try await searchService.search(term: term, limit: 5)
                 guard !Task.isCancelled else { return }
                 searchResults = results
-                // 검색 결과에 대해서도 번역 배지 조회
-                await fetchTranslationStatus(for: results)
             } catch {
                 guard !Task.isCancelled else { return }
                 searchResults = []
             }
             isSearching = false
         }
-    }
-
-    // MARK: - 번역 배지 배치 조회
-
-    private func fetchTranslationStatus(for songList: [Song]) async {
-        let newIDs = songList.map(\.id).filter { !checkedIDs.contains($0) }
-        guard !newIDs.isEmpty else { return }
-
-        checkedIDs.formUnion(newIDs)
-
-        let translatedIDs = await translatedLyricService.fetchTranslationStatus(appleMusicIDs: newIDs)
-        translatedSongIDs.formUnion(translatedIDs)
-    }
-
-    /// 특정 곡에 번역이 있는지 확인한다.
-    func hasTranslation(for song: Song) -> Bool {
-        translatedSongIDs.contains(song.id)
     }
 
     /// 특정 곡을 유저가 공부(번역)했는지 확인한다.
