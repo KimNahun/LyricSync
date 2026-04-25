@@ -166,23 +166,22 @@ Authorization: Bearer {SUPABASE_ANON_KEY}
 - `MusicCatalogSearchRequest`로 Apple Music 카탈로그 검색.
 - **검색 UI**: 메인 화면(차트 리스트) 상단에 검색바 (`.searchable` modifier).
 - **Debounce**: 유저가 타이핑을 멈추고 300ms 후 검색 실행. 타이핑 중에는 API 호출하지 않음.
-- **미리보기**: 검색 결과 상위 5개를 드롭다운/오버레이로 표시 (앨범 아트, 곡명, 아티스트명 + 번역 여부 배지).
+- **미리보기**: 검색 결과 상위 5개를 드롭다운/오버레이로 표시 (앨범 아트, 곡명, 아티스트명 + "내가 번역" ✓ 배지).
 - **탭 시 동작**: 검색 결과 곡을 탭하면 해당 곡의 노래 상세 페이지로 `NavigationStack` push.
 - **검색 취소**: 빈 텍스트이거나 Cancel 탭 시 미리보기 닫고 차트 리스트로 복귀.
 
-#### 8. 번역 여부 배지 (모든 곡 리스트 공통)
+#### 8. "내가 번역" ✓ 배지 (모든 곡 리스트 공통)
 
-- **차트 리스트, 검색 결과** 등 곡이 표시되는 모든 곳에서 번역 여부를 표시.
+- **차트 리스트, 검색 결과** 등 곡이 표시되는 모든 곳에서 **현재 로그인한 유저가 직접 번역한 곡**만 ✓ 배지로 표시한다.
+- **글로벌 AI 번역 존재 여부 배지는 사용하지 않는다** (R1-3에서 제거됨). 이유: "내가 번역한 곡 리스트" 화면과의 일관성. 두 화면 모두 `user_translations.user_id` 동일 기준이어야 모순이 없음.
 - **구현 방식**:
-  - 화면에 표시되는 곡들의 `apple_music_id` 목록을 Supabase에 배치 조회.
+  - 로그인 시 `user_translations` 테이블에서 본인 user_id 의 모든 `apple_music_id` 한 번 조회 → 메모리 Set 보관.
     ```
-    GET /songs?apple_music_id=in.("id1","id2","id3")&select=apple_music_id,lyrics(type,lang)
+    GET /user_translations?user_id=eq.{USER_ID}&select=apple_music_id
     ```
-  - `type=translated` 레코드가 있는 곡 → 번역 배지 표시 (예: "한" 또는 "번역" 뱃지).
-  - 없는 곡 → 배지 없음.
-- **타이밍**: 차트 로드 완료 후 / 검색 결과 받은 후, 비동기로 번역 여부 조회. 곡 리스트는 먼저 표시하고 배지는 뒤늦게 나타나도 OK (로딩 차단하지 않음).
-- **캐시**: 한 세션 내에서 이미 조회한 `apple_music_id`는 재조회하지 않음 (인메모리 딕셔너리).
-- **배치 크기**: 100개를 한 번에 조회 (`in.(...)` 쿼리). 청크 분할 불필요.
+  - 곡 리스트 렌더 시 `studiedSongIDs.contains(song.id)` 로 ✓ 표시.
+- **AI 번역(`lyrics` 테이블 type=translated) 데이터는 PlayerView 한국어 자막용으로 그대로 활용**. UI 배지에서만 제외.
+- **비로그인 상태**: ✓ 배지 표시 안 함.
 
 ---
 
