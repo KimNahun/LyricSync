@@ -101,6 +101,8 @@ struct MyTranslationsListView: View {
                 .foregroundStyle(.quaternary)
         }
         .contentShape(Rectangle())
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(summary.title), \(summary.artist), 버전 \(summary.versionCount)개, \(summary.lineCount)줄")
     }
 
     // MARK: - 빈 상태

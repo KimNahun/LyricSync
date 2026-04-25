@@ -1,131 +1,108 @@
 import SwiftUI
 
-/// 드래그 가능한 원형 플로팅 플레이어 버튼.
+/// 하단 막대형 미니 플레이어.
+/// `safeAreaInset(edge: .bottom)` 로 글로벌 하단 고정. 탭하면 풀 플레이어 sheet 등장.
+/// 단, 같은 곡의 SongDetailView 가 이미 NavigationStack 에 push 된 상태면 sheet 띄우지 않음(P0 #2 옵션 B).
+///
+/// (파일명 `FloatingPlayerButton.swift` 는 pbxproj 안정성 위해 유지. 실제 구현은 막대형 미니플레이어.)
 struct FloatingPlayerButton: View {
     @Environment(PlayerViewModel.self) private var playerViewModel
 
-    @AppStorage("floatingPlayerX") private var posX: Double = -1
-    @AppStorage("floatingPlayerY") private var posY: Double = -1
-    /// 드래그 중 현재 위치를 직접 추적. posX/posY와 별개.
-    @State private var currentX: Double = -1
-    @State private var currentY: Double = -1
-    @State private var isDragging = false
-
-    private let buttonSize: CGFloat = 56
+    private let barHeight: CGFloat = 64
 
     var body: some View {
         @Bindable var vm = playerViewModel
 
-        GeometryReader { geo in
-            let defaultX = geo.size.width - buttonSize - 16
-            let defaultY = geo.size.height - buttonSize - 100
-
-            playerButton
-                .position(
-                    x: (currentX < 0 ? defaultX : currentX) + buttonSize / 2,
-                    y: (currentY < 0 ? defaultY : currentY) + buttonSize / 2
-                )
-                .gesture(
-                    DragGesture(coordinateSpace: .global)
-                        .onChanged { value in
-                            if !isDragging {
-                                isDragging = true
-                                // 드래그 시작 시 현재 위치를 기준점으로 설정
-                                if currentX < 0 { currentX = defaultX }
-                                if currentY < 0 { currentY = defaultY }
-                            }
-                            // 애니메이션 없이 즉시 위치 업데이트 → 손가락 따라 바로 이동
-                            currentX = (posX < 0 ? defaultX : posX) + value.translation.width
-                            currentY = (posY < 0 ? defaultY : posY) + value.translation.height
-                        }
-                        .onEnded { value in
-                            let finalX = (posX < 0 ? defaultX : posX) + value.translation.width
-                            let finalY = (posY < 0 ? defaultY : posY) + value.translation.height
-                            let snapped = snapToEdge(
-                                x: finalX, y: finalY,
-                                screenWidth: geo.size.width,
-                                screenHeight: geo.size.height
-                            )
-                            // 릴리스 후에만 spring 애니메이션으로 가장자리 스냅
-                            withAnimation(.spring(response: 0.35, dampingFraction: 0.75)) {
-                                currentX = snapped.x
-                                currentY = snapped.y
-                            }
-                            posX = snapped.x
-                            posY = snapped.y
-                            isDragging = false
-                        }
-                )
-                .onAppear {
-                    currentX = posX
-                    currentY = posY
-                }
-                .fullScreenCover(isPresented: $vm.showFullPlayer) {
-                    FullPlayerView()
-                }
-        }
-        .ignoresSafeArea()
-    }
-
-    // MARK: - 버튼 UI
-
-    private var playerButton: some View {
-        Button {
-            guard !isDragging else { return }
-            playerViewModel.showFullPlayer = true
-        } label: {
-            ZStack {
-                if let url = playerViewModel.currentSong?.artworkURL {
-                    CachedAsyncImage(url: url, size: buttonSize, cornerRadius: buttonSize / 2)
-                } else {
-                    Circle()
+        VStack(spacing: 0) {
+            // 상단 진행 바 (2pt)
+            GeometryReader { geo in
+                ZStack(alignment: .leading) {
+                    Rectangle()
                         .fill(Color(.tertiarySystemFill))
-                        .frame(width: buttonSize, height: buttonSize)
-                        .overlay {
-                            Image(systemName: "music.note")
-                                .foregroundStyle(.secondary)
-                        }
+                        .frame(height: 2)
+                    Rectangle()
+                        .fill(Color.appAccent)
+                        .frame(width: geo.size.width * progress, height: 2)
                 }
-
-                // 프로그레스 링
-                Circle()
-                    .stroke(Color.appAccent.opacity(0.15), lineWidth: 3)
-                    .frame(width: buttonSize + 4, height: buttonSize + 4)
-
-                Circle()
-                    .trim(from: 0, to: progress)
-                    .stroke(Color.appAccent, style: StrokeStyle(lineWidth: 3, lineCap: .round))
-                    .frame(width: buttonSize + 4, height: buttonSize + 4)
-                    .rotationEffect(.degrees(-90))
-
-                // 재생/일시정지 오버레이
-                Circle()
-                    .fill(.ultraThinMaterial)
-                    .frame(width: 24, height: 24)
-                    .overlay {
-                        Image(systemName: playerViewModel.isPlaying ? "pause.fill" : "play.fill")
-                            .font(.system(size: 10, weight: .bold))
-                            .foregroundStyle(.primary)
-                    }
-                    .offset(x: buttonSize / 2 - 4, y: buttonSize / 2 - 4)
             }
+            .frame(height: 2)
+
+            // 본체: 아트 + 곡정보 + 재생/일시정지
+            HStack(spacing: 12) {
+                Button {
+                    handleTap()
+                } label: {
+                    HStack(spacing: 12) {
+                        if let url = playerViewModel.currentSong?.artworkURL {
+                            CachedAsyncImage(url: url, size: 40, cornerRadius: 6)
+                        } else {
+                            RoundedRectangle(cornerRadius: 6)
+                                .fill(Color(.tertiarySystemFill))
+                                .frame(width: 40, height: 40)
+                                .overlay {
+                                    Image(systemName: "music.note")
+                                        .foregroundStyle(.secondary)
+                                }
+                        }
+
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(playerViewModel.currentSong?.title ?? "")
+                                .font(.subheadline.weight(.semibold))
+                                .foregroundStyle(.primary)
+                                .lineLimit(1)
+
+                            Text(playerViewModel.currentSong?.artistName ?? "")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                                .lineLimit(1)
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityElement(children: .combine)
+                .accessibilityLabel("\(playerViewModel.currentSong?.title ?? "재생 중"), \(playerViewModel.currentSong?.artistName ?? "")")
+                .accessibilityHint("탭하면 풀 플레이어를 엽니다")
+
+                Button {
+                    Task {
+                        if playerViewModel.isPlaying {
+                            await playerViewModel.pause()
+                        } else {
+                            await playerViewModel.resume()
+                        }
+                    }
+                } label: {
+                    Image(systemName: playerViewModel.isPlaying ? "pause.fill" : "play.fill")
+                        .font(.title3)
+                        .foregroundStyle(Color.appAccent)
+                        .frame(width: 44, height: 44)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(playerViewModel.isPlaying ? "일시정지" : "재생")
+            }
+            .padding(.horizontal, 12)
+            .frame(height: barHeight)
+            .background(.regularMaterial)
         }
-        .buttonStyle(.plain)
-        .shadow(color: .black.opacity(0.2), radius: 8, x: 0, y: 4)
+        .sheet(isPresented: $vm.showFullPlayer) {
+            FullPlayerView()
+        }
     }
 
     private var progress: CGFloat {
         guard playerViewModel.duration > 0 else { return 0 }
-        return playerViewModel.currentTime / playerViewModel.duration
+        return CGFloat(playerViewModel.currentTime / playerViewModel.duration)
     }
 
-    private func snapToEdge(x: CGFloat, y: CGFloat, screenWidth: CGFloat, screenHeight: CGFloat) -> CGPoint {
-        let margin: CGFloat = 8
-        let centerX = x + buttonSize / 2
-        let snappedX = centerX < screenWidth / 2 ? margin : screenWidth - buttonSize - margin
-        let minY: CGFloat = 60
-        let maxY = screenHeight - buttonSize - 100
-        let snappedY = min(max(y, minY), maxY)
-        return CGPoint(x: snappedX, y: snappedY)
+    /// 탭 동작: 같은 곡의 SongDetail 이 이미 push 되어 있으면 sheet 무시(자연스레 그 화면이 보임).
+    private func handleTap() {
+        if let detailID = playerViewModel.currentDetailSongID,
+           detailID == playerViewModel.currentSong?.id {
+            // 이미 같은 곡의 상세 화면을 보고 있음. sheet 안 띄움.
+            return
+        }
+        playerViewModel.showFullPlayer = true
     }
 }

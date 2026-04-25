@@ -9,7 +9,6 @@ struct SongDetailView: View {
     @State private var userTranslations: [Int: String] = [:]
     @State private var editingLineIndex: Int?
     @State private var showTranslationInput = false
-    @State private var isStudyMode = false
 
     /// 현재 편집 중인 번역 버전. 기본 1.
     var translationVersion: Int = 1
@@ -25,12 +24,10 @@ struct SongDetailView: View {
     }
 
     var body: some View {
-        @Bindable var vm = playerViewModel
-
         VStack(spacing: 0) {
             playerHeader
 
-            // 모드 바: AI 번역 토글 + 공부 모드 토글
+            // P1 #8 — AI 동시/AI 가림/공부 단일 segmented control
             if isCurrentSong {
                 modeBar
             }
@@ -39,15 +36,27 @@ struct SongDetailView: View {
 
             if isCurrentSong {
                 ScrollViewReader { proxy in
-                    lyricSection(proxy: proxy)
-                        .onChange(of: playerViewModel.currentLyricIndex) { _, newIndex in
-                            guard let index = newIndex,
-                                  !playerViewModel.isUserScrolling,
-                                  !playerViewModel.isDragging else { return }
-                            withAnimation(.easeInOut(duration: 0.3)) {
-                                proxy.scrollTo(index, anchor: .center)
+                    ZStack(alignment: .bottomTrailing) {
+                        lyricSection(proxy: proxy)
+                            .onChange(of: playerViewModel.currentLyricIndex) { _, newIndex in
+                                guard let index = newIndex,
+                                      !playerViewModel.isUserScrolling,
+                                      !playerViewModel.isDragging else { return }
+                                withAnimation(.easeInOut(duration: 0.3)) {
+                                    proxy.scrollTo(index, anchor: .center)
+                                }
+                            }
+
+                        // P1 #9 — "현재 줄로 이동" 칩
+                        if playerViewModel.isUserScrolling, let cur = playerViewModel.currentLyricIndex {
+                            currentLineChip {
+                                playerViewModel.resumeAutoScroll()
+                                withAnimation(.easeInOut(duration: 0.3)) {
+                                    proxy.scrollTo(cur, anchor: .center)
+                                }
                             }
                         }
+                    }
                 }
             } else {
                 notPlayingView
@@ -57,6 +66,22 @@ struct SongDetailView: View {
         .navigationBarTitleDisplayMode(.inline)
         .task {
             await loadUserTranslations()
+        }
+        .onAppear {
+            // P0 #2 옵션 B — 같은 곡일 때만 detail 등록
+            if isCurrentSong {
+                playerViewModel.currentDetailSongID = song.id
+            }
+        }
+        .onChange(of: isCurrentSong) { _, newValue in
+            if newValue {
+                playerViewModel.currentDetailSongID = song.id
+            }
+        }
+        .onDisappear {
+            if playerViewModel.currentDetailSongID == song.id {
+                playerViewModel.currentDetailSongID = nil
+            }
         }
         .sheet(isPresented: $showTranslationInput) {
             if let index = editingLineIndex,
@@ -74,50 +99,73 @@ struct SongDetailView: View {
         }
     }
 
-    // MARK: - 모드 바
+    // MARK: - 모드 바 (P1 #8)
 
+    private var availableModes: [DisplayMode] {
+        var modes: [DisplayMode] = []
+        if playerViewModel.hasTranslation {
+            modes.append(.aiSimultaneous)
+            modes.append(.aiHidden)
+        }
+        if dbUserId != nil {
+            modes.append(.study)
+        }
+        return modes
+    }
+
+    @ViewBuilder
     private var modeBar: some View {
-        HStack(spacing: 8) {
-            // AI 번역 모드 (번역 있을 때만)
-            if playerViewModel.hasTranslation {
-                @Bindable var vm = playerViewModel
+        @Bindable var vm = playerViewModel
+        let modes = availableModes
 
-                Picker("", selection: $vm.translationMode) {
-                    Text("동시").tag(TranslationMode.simultaneous)
-                    Text("가림").tag(TranslationMode.hidden)
+        if modes.count >= 2 {
+            HStack {
+                Picker("표시 모드", selection: $vm.displayMode) {
+                    ForEach(modes) { mode in
+                        Text(mode.label).tag(mode)
+                    }
                 }
                 .pickerStyle(.segmented)
-                .frame(maxWidth: .infinity)
-            } else {
-                Spacer()
-            }
-
-            // 공부 모드 토글
-            if dbUserId != nil {
-                Button {
-                    withAnimation(.easeInOut(duration: 0.2)) {
-                        isStudyMode.toggle()
+                .accessibilityLabel("가사 표시 모드 선택")
+                .onAppear {
+                    if !modes.contains(vm.displayMode), let first = modes.first {
+                        vm.displayMode = first
                     }
-                } label: {
-                    HStack(spacing: 4) {
-                        Image(systemName: isStudyMode ? "pencil.circle.fill" : "pencil.circle")
-                            .font(.body)
-                        Text("공부")
-                            .font(.caption.weight(.medium))
-                    }
-                    .foregroundStyle(isStudyMode ? Color.appStudy : Color.secondary)
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 6)
-                    .background(
-                        isStudyMode ? Color.appStudy.opacity(0.12) : Color(.tertiarySystemFill),
-                        in: Capsule()
-                    )
                 }
-                .buttonStyle(.plain)
+                .onChange(of: playerViewModel.hasTranslation) { _, _ in
+                    if !availableModes.contains(vm.displayMode), let first = availableModes.first {
+                        vm.displayMode = first
+                    }
+                }
             }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 6)
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 6)
+    }
+
+    // MARK: - 현재 줄로 이동 칩 (P1 #9)
+
+    private func currentLineChip(action: @escaping () -> Void) -> some View {
+        Button {
+            action()
+        } label: {
+            HStack(spacing: 4) {
+                Image(systemName: "arrow.down.to.line")
+                    .font(.caption.weight(.semibold))
+                Text("현재 줄")
+                    .font(.caption.weight(.semibold))
+            }
+            .foregroundStyle(.white)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .background(Color.appAccent, in: Capsule())
+            .shadow(color: .black.opacity(0.18), radius: 4, x: 0, y: 2)
+        }
+        .buttonStyle(.plain)
+        .padding(.trailing, 16)
+        .padding(.bottom, 16)
+        .accessibilityLabel("현재 재생 중인 가사 줄로 이동")
+        .transition(.opacity.combined(with: .scale))
     }
 
     // MARK: - 유저 번역 로드/저장
@@ -167,12 +215,14 @@ struct SongDetailView: View {
                     Text(song.title)
                         .font(.subheadline.weight(.semibold))
                         .foregroundStyle(.primary)
-                        .lineLimit(1)
+                        .lineLimit(1...2)
+                        .minimumScaleFactor(0.85)
 
                     Text(song.artistName)
                         .font(.caption)
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
+                        .minimumScaleFactor(0.85)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
 
@@ -192,6 +242,7 @@ struct SongDetailView: View {
                         .foregroundStyle(Color.appAccent)
                 }
                 .frame(width: 44, height: 44)
+                .accessibilityLabel(isPlaying ? "일시정지" : "재생")
             }
             .padding(.horizontal, 16)
             .padding(.top, 8)
@@ -212,17 +263,20 @@ struct SongDetailView: View {
                         }
                     )
                     .tint(Color.appAccent)
+                    .padding(.top, 4)
+                    .contentShape(Rectangle())
+                    .accessibilityLabel("재생 위치")
+                    .accessibilityValue("\(TimeFormatUtil.format(playerViewModel.currentTime)) / \(TimeFormatUtil.format(playerViewModel.duration))")
 
                     HStack {
+                        // P1 #13 — caption + monospacedDigit
                         Text(TimeFormatUtil.format(playerViewModel.currentTime))
-                            .font(.caption2)
+                            .font(.caption.monospacedDigit())
                             .foregroundStyle(.secondary)
-                            .monospacedDigit()
                         Spacer()
                         Text(TimeFormatUtil.format(playerViewModel.duration))
-                            .font(.caption2)
+                            .font(.caption.monospacedDigit())
                             .foregroundStyle(.secondary)
-                            .monospacedDigit()
                     }
                 }
                 .padding(.horizontal, 16)
@@ -254,13 +308,28 @@ struct SongDetailView: View {
             }
 
         case .instrumental:
-            lyricMessageView(icon: "pianokeys", message: "인스트루멘탈")
+            lyricUnavailableView(
+                title: "인스트루멘탈",
+                description: "이 곡은 보컬이 없는 인스트루멘탈입니다.",
+                systemImage: "pianokeys",
+                showRetry: false
+            )
 
         case .notFound:
-            lyricMessageView(icon: "text.slash", message: "가사를 찾을 수 없습니다")
+            lyricUnavailableView(
+                title: "가사를 찾을 수 없어요",
+                description: "이 곡에 대한 싱크 가사가 lrclib 와 Supabase 모두에 없습니다.",
+                systemImage: "text.slash",
+                showRetry: true
+            )
 
         case .error(let message):
-            lyricMessageView(icon: "exclamationmark.circle", message: message)
+            lyricUnavailableView(
+                title: "가사를 불러올 수 없어요",
+                description: message,
+                systemImage: "exclamationmark.circle",
+                showRetry: true
+            )
         }
     }
 
@@ -280,15 +349,15 @@ struct SongDetailView: View {
                             }
                         )
 
-                        if isStudyMode {
-                            // 공부 모드: 원문 + 내 번역만. AI 번역 완전 숨김.
+                        switch playerViewModel.displayMode {
+                        case .study:
+                            // 공부: 원문 + 내 번역만
                             if let userTrans = userTranslations[index] {
                                 userTranslationCard(text: userTrans, index: index)
                             } else if dbUserId != nil {
                                 addTranslationButton(index: index)
                             }
-                        } else {
-                            // 동시/가림 모드: AI 번역만 표시. 내 번역 숨김.
+                        case .aiSimultaneous, .aiHidden:
                             if let tLines = translatedLines, index < tLines.count {
                                 translatedLineView(
                                     text: tLines[index].text,
@@ -327,7 +396,7 @@ struct SongDetailView: View {
 
                 Text("탭하여 수정")
                     .font(.caption2)
-                    .foregroundStyle(Color.appStudy.opacity(0.4))
+                    .foregroundStyle(.secondary)
             }
             .frame(maxWidth: .infinity)
             .padding(.horizontal, 12)
@@ -336,6 +405,7 @@ struct SongDetailView: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        .accessibilityLabel("내 번역: \(text). 탭하여 수정")
     }
 
     // MARK: - 번역 추가 버튼
@@ -346,57 +416,69 @@ struct SongDetailView: View {
             showTranslationInput = true
         } label: {
             Text("번역 쓰기")
-                .font(.caption2)
-                .foregroundStyle(Color.appStudy.opacity(0.5))
+                .font(.caption.weight(.medium))
+                .foregroundStyle(Color.appStudy)
                 .padding(.horizontal, 12)
                 .padding(.vertical, 6)
                 .background(
                     Capsule()
-                        .strokeBorder(Color.appStudy.opacity(0.2), lineWidth: 1)
+                        .strokeBorder(Color.appStudy.opacity(0.4), lineWidth: 1)
                 )
         }
         .buttonStyle(.plain)
+        .accessibilityLabel("이 줄 번역 추가하기")
     }
 
-    // MARK: - AI 번역 줄 표시
+    // MARK: - AI 번역 줄 표시 (P0 #4)
 
     @ViewBuilder
     private func translatedLineView(text: String, index: Int, isActive: Bool) -> some View {
         let isRevealed = playerViewModel.revealedLineIndices.contains(index)
 
-        switch playerViewModel.translationMode {
-        case .simultaneous:
+        switch playerViewModel.displayMode {
+        case .aiSimultaneous:
             Text(text)
                 .font(.footnote)
-                .foregroundStyle(isActive ? Color.appAccent : Color.primary.opacity(0.4))
+                .foregroundStyle(isActive ? Color.appAccent : .secondary)
                 .multilineTextAlignment(.center)
                 .frame(maxWidth: .infinity)
 
-        case .hidden:
+        case .aiHidden:
             Button {
                 withAnimation(.easeInOut(duration: 0.2)) {
                     playerViewModel.toggleReveal(at: index)
                 }
             } label: {
                 if isRevealed {
-                    Text(text)
-                        .font(.footnote)
-                        .foregroundStyle(isActive ? Color.appAccent : Color.primary.opacity(0.45))
-                        .multilineTextAlignment(.center)
-                        .frame(maxWidth: .infinity)
-                        .transition(.opacity.combined(with: .scale(scale: 0.95)))
+                    HStack(spacing: 6) {
+                        Text(text)
+                            .font(.footnote)
+                            .foregroundStyle(isActive ? Color.appAccent : .secondary)
+                            .multilineTextAlignment(.center)
+                            .frame(maxWidth: .infinity)
+                            .transition(.opacity.combined(with: .scale(scale: 0.95)))
+
+                        Image(systemName: "eye.slash")
+                            .font(.system(size: 13))
+                            .foregroundStyle(.tertiary)
+                    }
+                    .padding(.horizontal, 8)
                 } else {
                     Text("번역 보기")
-                        .font(.caption2)
-                        .foregroundStyle(.secondary.opacity(0.4))
+                        .font(.caption.weight(.medium))
+                        .foregroundStyle(.secondary)
                         .padding(.horizontal, 12)
                         .padding(.vertical, 4)
-                        .background(Capsule().fill(Color(.systemGray5)))
+                        .background(Capsule().fill(Color(.tertiarySystemFill)))
                 }
             }
             .buttonStyle(.plain)
             .frame(maxWidth: .infinity)
             .padding(.bottom, 2)
+            .accessibilityLabel(isRevealed ? "번역 다시 가리기" : "번역 공개")
+
+        case .study:
+            EmptyView()
         }
     }
 
@@ -409,14 +491,22 @@ struct SongDetailView: View {
         .frame(maxWidth: .infinity)
     }
 
-    private func lyricMessageView(icon: String, message: String) -> some View {
-        VStack(spacing: 12) {
-            Image(systemName: icon)
-                .font(.title)
-                .foregroundStyle(.tertiary)
-            Text(message)
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
+    // MARK: - 가사 미사용/에러 (P1 #12)
+
+    @ViewBuilder
+    private func lyricUnavailableView(title: String, description: String, systemImage: String, showRetry: Bool) -> some View {
+        ContentUnavailableView {
+            Label(title, systemImage: systemImage)
+        } description: {
+            Text(description)
+        } actions: {
+            if showRetry {
+                Button("다시 시도") {
+                    playerViewModel.retryLyricFetch()
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(Color.appAccent)
+            }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }

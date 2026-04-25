@@ -23,6 +23,17 @@ final class PlayerViewModel {
         }
     }
 
+    /// 통합 디스플레이 모드 — AI 동시 / AI 가림 / 공부. UserDefaults 저장.
+    var displayMode: DisplayMode {
+        didSet {
+            UserDefaults.standard.set(displayMode.rawValue, forKey: "displayMode")
+            // AI 모드일 때 translationMode 와 동기화 (기존 코드 호환)
+            if let tMode = displayMode.translationMode {
+                translationMode = tMode
+            }
+        }
+    }
+
     /// 가림 모드에서 공개된 줄 인덱스. 곡 변경/풀플레이어 열기 시 리셋.
     var revealedLineIndices: Set<Int> = []
 
@@ -33,9 +44,9 @@ final class PlayerViewModel {
     private(set) var isDragging: Bool = false
     /// 슬라이더 UI 값.
     var sliderValue: TimeInterval = 0
-    /// 사용자 수동 스크롤 상태.
+    /// 사용자 수동 스크롤 상태. 자동 재개 없음 — 사용자가 명시적 칩 버튼으로만 해제.
     var isUserScrolling: Bool = false
-    /// fullScreenCover 바인딩 상태.
+    /// 풀 플레이어 sheet 바인딩 상태.
     var showFullPlayer: Bool = false {
         didSet {
             if showFullPlayer {
@@ -43,6 +54,9 @@ final class PlayerViewModel {
             }
         }
     }
+
+    /// 현재 push 되어 있는 SongDetail 의 곡 ID. 미니플레이어 탭이 같은 곡 detail 인 경우 sheet 를 띄우지 않게 한다.
+    var currentDetailSongID: String? = nil
 
     /// 현재 재생 시간 기준으로 활성 가사 줄 인덱스를 계산한다.
     var currentLyricIndex: Int? {
@@ -72,6 +86,9 @@ final class PlayerViewModel {
 
         let savedMode = UserDefaults.standard.string(forKey: "translationMode")
         self.translationMode = TranslationMode(rawValue: savedMode ?? "") ?? .simultaneous
+
+        let savedDisplay = UserDefaults.standard.string(forKey: "displayMode")
+        self.displayMode = DisplayMode(rawValue: savedDisplay ?? "") ?? .aiSimultaneous
     }
 
     /// deinit 대신 뷰의 onDisappear에서 호출하여 타이머를 정리한다.
@@ -181,14 +198,17 @@ final class PlayerViewModel {
         userScrollTimer = nil
     }
 
+    /// 사용자가 스크롤 제스처를 끝낸 후 호출. 자동 재개는 없음 — `resumeAutoScroll()` 으로 명시적 해제.
     func onUserScrollEnded() {
         userScrollTimer?.invalidate()
-        userScrollTimer = Timer.scheduledTimer(withTimeInterval: 5.0, repeats: false) { [weak self] _ in
-            Task { @MainActor [weak self] in
-                self?.isUserScrolling = false
-                self?.userScrollTimer = nil
-            }
-        }
+        userScrollTimer = nil
+    }
+
+    /// "현재 줄로 이동" 칩에서 호출. 자동 스크롤 재개.
+    func resumeAutoScroll() {
+        isUserScrolling = false
+        userScrollTimer?.invalidate()
+        userScrollTimer = nil
     }
 
     // MARK: - Timer
@@ -224,6 +244,17 @@ final class PlayerViewModel {
     }
 
     // MARK: - 가사 Fetch
+
+    /// 가사 fetch 재시도 — 에러/notFound 상태에서 사용자가 명시적으로 다시 시도.
+    func retryLyricFetch() {
+        guard let song = currentSong else { return }
+        lyricTask?.cancel()
+        lyricState = .loading
+        translatedLines = nil
+        lyricTask = Task {
+            await fetchLyrics(song: song)
+        }
+    }
 
     private func fetchLyrics(song: Song) async {
         AppLogger.info("가사 조회 시작: \(song.title) (id=\(song.id))", category: .lyrics)

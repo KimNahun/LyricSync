@@ -1,11 +1,11 @@
 import SwiftUI
 
 /// Apple Music 인기 팝 차트 Top 50을 표시하는 메인 화면.
+/// P1 #6 — 표준 `.searchable` modifier 사용. 검색 결과는 제안(suggestion)으로 표시.
 struct ChartListView: View {
     @State private var viewModel = ChartViewModel()
     @Environment(PlayerViewModel.self) private var playerViewModel
     @Environment(\.dbUserId) private var dbUserId
-    @FocusState private var isSearchFocused: Bool
 
     var body: some View {
         Group {
@@ -41,52 +41,18 @@ struct ChartListView: View {
         } else if let errorMessage = viewModel.errorMessage {
             errorView(message: errorMessage)
         } else {
-            VStack(spacing: 0) {
-                searchBar
-                Divider()
-
-                if viewModel.isSearchActive {
-                    searchResultsList
-                } else {
-                    songList
+            songList
+                .searchable(
+                    text: $viewModel.searchText,
+                    placement: .navigationBarDrawer(displayMode: .always),
+                    prompt: "곡명 또는 아티스트 검색"
+                )
+                .searchSuggestions {
+                    if viewModel.isSearchActive {
+                        searchSuggestionsContent
+                    }
                 }
-            }
         }
-    }
-
-    // MARK: - 상단 검색바
-
-    private var searchBar: some View {
-        HStack(spacing: 10) {
-            Image(systemName: "magnifyingglass")
-                .foregroundStyle(.secondary)
-                .font(.subheadline)
-
-            TextField("곡명 또는 아티스트 검색", text: $viewModel.searchText)
-                .textFieldStyle(.plain)
-                .font(.subheadline)
-                .autocorrectionDisabled()
-                .submitLabel(.search)
-                .focused($isSearchFocused)
-                .onSubmit { isSearchFocused = false }
-
-            if !viewModel.searchText.isEmpty {
-                Button {
-                    viewModel.searchText = ""
-                    isSearchFocused = false
-                } label: {
-                    Image(systemName: "xmark.circle.fill")
-                        .foregroundStyle(.tertiary)
-                        .font(.subheadline)
-                }
-                .buttonStyle(.plain)
-            }
-        }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 9)
-        .background(Color(.tertiarySystemFill), in: RoundedRectangle(cornerRadius: 10))
-        .padding(.horizontal, 16)
-        .padding(.vertical, 8)
     }
 
     // MARK: - 차트 리스트
@@ -116,45 +82,29 @@ struct ChartListView: View {
         }
     }
 
-    // MARK: - 검색 결과 리스트
+    // MARK: - 검색 제안 (드롭다운)
 
-    private var searchResultsList: some View {
-        ScrollView {
-            LazyVStack(spacing: 0) {
-                if viewModel.isSearching {
-                    ProgressView()
-                        .padding(.top, 40)
-                } else if viewModel.searchResults.isEmpty && viewModel.isSearchActive {
-                    VStack(spacing: 8) {
-                        Image(systemName: "magnifyingglass")
-                            .font(.title2)
-                            .foregroundStyle(.tertiary)
-                        Text("검색 결과가 없습니다")
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
-                    }
-                    .padding(.top, 60)
-                } else {
-                    ForEach(viewModel.searchResults) { song in
-                        NavigationLink(value: song) {
-                            SongRowView(
-                                song: song,
-                                hasStudied: viewModel.hasStudied(for: song)
-                            )
-                            .padding(.horizontal, 16)
-                            .padding(.vertical, 8)
-                        }
-                        .buttonStyle(.plain)
-
-                        Divider()
-                            .padding(.leading, 84)
-                    }
-                }
+    @ViewBuilder
+    private var searchSuggestionsContent: some View {
+        if viewModel.isSearching {
+            HStack {
+                ProgressView()
+                Text("검색 중...")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
             }
-        }
-        .scrollDismissesKeyboard(.interactively)
-        .navigationDestination(for: Song.self) { song in
-            SongDetailView(song: song)
+        } else if viewModel.searchResults.isEmpty {
+            ContentUnavailableView.search(text: viewModel.searchText)
+        } else {
+            ForEach(viewModel.searchResults) { song in
+                NavigationLink(value: song) {
+                    SongRowView(
+                        song: song,
+                        hasStudied: viewModel.hasStudied(for: song)
+                    )
+                }
+                .buttonStyle(.plain)
+            }
         }
     }
 
@@ -176,11 +126,12 @@ struct ChartListView: View {
                 Task { await viewModel.fetchCharts() }
             }
             .buttonStyle(.borderedProminent)
+            .tint(Color.appAccent)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
-    // MARK: - 권한 거부 뷰
+    // MARK: - 권한 거부 뷰 (백업)
 
     private var deniedView: some View {
         VStack(spacing: 16) {
@@ -200,6 +151,7 @@ struct ChartListView: View {
                 }
             }
             .buttonStyle(.borderedProminent)
+            .tint(Color.appAccent)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }

@@ -13,37 +13,38 @@ struct TranslationInputView: View {
 
     var body: some View {
         NavigationStack {
-            VStack(spacing: 20) {
-                // 원본 가사
-                VStack(alignment: .leading, spacing: 6) {
-                    Text("원문")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+            ScrollView {
+                VStack(spacing: 20) {
+                    // 원본 가사
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("원문")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
 
-                    Text(originalText)
-                        .font(.body)
-                        .foregroundStyle(.primary)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(12)
-                        .background(Color(.tertiarySystemFill), in: RoundedRectangle(cornerRadius: 10))
+                        Text(originalText)
+                            .font(.body)
+                            .foregroundStyle(.primary)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(12)
+                            .background(Color(.tertiarySystemFill), in: RoundedRectangle(cornerRadius: 10))
+                    }
+
+                    // 번역 입력
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("내 번역")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+
+                        TextField("번역을 입력하세요", text: $translation, axis: .vertical)
+                            .lineLimit(3...8)
+                            .padding(12)
+                            .background(Color(.tertiarySystemFill), in: RoundedRectangle(cornerRadius: 10))
+                            .focused($isFocused)
+                    }
                 }
-
-                // 번역 입력
-                VStack(alignment: .leading, spacing: 6) {
-                    Text("내 번역")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-
-                    TextField("번역을 입력하세요", text: $translation, axis: .vertical)
-                        .lineLimit(3...6)
-                        .padding(12)
-                        .background(Color(.tertiarySystemFill), in: RoundedRectangle(cornerRadius: 10))
-                        .focused($isFocused)
-                }
-
-                Spacer()
+                .padding(20)
             }
-            .padding(20)
+            .scrollDismissesKeyboard(.interactively)
             .navigationTitle("번역 입력")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -59,6 +60,7 @@ struct TranslationInputView: View {
                     }
                     .fontWeight(.semibold)
                     .disabled(translation.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                    .accessibilityLabel("번역 저장")
                 }
             }
             .onAppear {
@@ -66,6 +68,7 @@ struct TranslationInputView: View {
                 isFocused = true
             }
         }
-        .presentationDetents([.medium])
+        .presentationDetents([.medium, .large])
+        .presentationDragIndicator(.visible)
     }
 }
