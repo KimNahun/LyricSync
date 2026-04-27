@@ -319,7 +319,7 @@ final class PlayerViewModel {
 
     /// LRC 형식 문자열을 파싱하여 LyricLine 배열로 반환한다.
     private func parseLRC(_ lrc: String) -> [LyricLine] {
-        let pattern = /\[(\d{2}):(\d{2}\.\d{2})\]\s?(.*)/
+        let pattern = /\[(\d{1,3}):(\d{2}(?:\.\d{1,3})?)\]\s?(.*)/
         return lrc.components(separatedBy: "\n").compactMap { line in
             guard let match = line.firstMatch(of: pattern) else { return nil }
             let minutes = Double(match.1) ?? 0
