@@ -38,6 +38,9 @@ __MACOSX/
 LyricSync/LyricSync.xcodeproj/xcuserdata/
 LyricSync/LyricSync.xcodeproj/project.xcworkspace/xcuserdata/
 
+# MCP config (contains access tokens)
+.mcp.json
+
 # Secrets (Supabase keys, API keys)
 LyricSync/Sources/Secrets.swift
 **/Secrets.swift
